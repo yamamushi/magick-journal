@@ -1,0 +1,10 @@
+{
+	"id": "magick-journal",
+	"name": "Magick Journal",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "This is an in-progress Obsidian plugin for various Magick-journaling related commands",
+	"author": "Yamamushi",
+	"authorUrl": "https://github.com/yamamushi/magick-journal",
+	"isDesktopOnly": false
+}
