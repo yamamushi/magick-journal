@@ -4,11 +4,21 @@ import * as SunCalc from 'suncalc';
 interface MagickJournalSettings {
 	defaultLocation: string;
 	headerFields: string;
+	astroIncludeEmoji: boolean,
+	astroIncludeEnglish: boolean,
+	weatherTempDecimalPlaces: string,
+	weatherTempUnits: string,
+	weatherPressureUnits: string,
 }
 
 const DEFAULT_SETTINGS: MagickJournalSettings = {
 	defaultLocation: '',
-	headerFields: 'Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other'
+	headerFields: 'Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other',
+	astroIncludeEmoji: true,
+	astroIncludeEnglish: true,
+	weatherTempDecimalPlaces: '2',
+	weatherTempUnits: 'fahrenheit',
+	weatherPressureUnits: 'inches',
 }
 
 export default class MagickJournalPlugin extends Plugin {
@@ -63,7 +73,7 @@ export default class MagickJournalPlugin extends Plugin {
 		}
 	}
 	ReloadData(){
-		const params = {format: 'txt', tz: '', lang: '', location: ''};
+		const params = {format: 'txt', tz: '', lang: 'english', location: '', emojis: false};
 
 		const tzOffset = new Date().getTimezoneOffset();
 		const tzSign = (tzOffset <= 0) ? '' : '-';
@@ -72,8 +82,7 @@ export default class MagickJournalPlugin extends Plugin {
 			isoOffset = '0' + isoOffset;
 		}
 		params['tz'] = tzSign + isoOffset;
-		params['lang'] = 'english';
-		params['format'] = 'txt';
+
 		const today = new Date();
 		fetch('http://ip-api.com/json/')
 			.then(response => response.json())
@@ -117,22 +126,135 @@ export default class MagickJournalPlugin extends Plugin {
 		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Saturday', 'dies Saturni ♄');
 		return this.LatinDayOfWeek;
 	}
+
+	UpdateAstroSigns(input : string): string {
+		if (input.includes('Aries')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Aries ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♈';
+			}
+			input = input.replace('Aries', output);
+		}
+		if (input.includes('Taurus')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Taurus ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♉';
+			}
+			input = input.replace('Taurus', output);
+		}
+		if (input.includes('Gemini')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Gemini ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♊';
+			}
+			input = input.replace('Gemini', output);
+		}
+		if (input.includes('Cancer')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Cancer ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♋';
+			}
+			input = input.replace('Cancer', output);
+		}
+		if (input.includes('Leo')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Leo ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♌';
+			}
+			input = input.replace('Leo', output);
+		}
+		if (input.includes('Virgo')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Virgo ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♍';
+			}
+			input = input.replace('Virgo', output);
+		}
+		if (input.includes('Libra')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Libra ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♎';
+			}
+			input = input.replace('Libra', output);
+		}
+		if (input.includes('Scorpio')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Scorpio ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♏';
+			}
+			input = input.replace('Scorpio', output);
+		}
+		if (input.includes('Sagittarius')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Sagittarius ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♐';
+			}
+			input = input.replace('Sagittarius', output);
+		}
+		if (input.includes('Capricorn')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Capricorn ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♑';
+			}
+			input = input.replace('Capricorn', output);
+		}
+		if (input.includes('Aquarius')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Aquarius ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♒';
+			}
+			input = input.replace('Aquarius', output);
+		}
+		if (input.includes('Pisces')) {
+			let output = '';
+			if (this.settings.astroIncludeEnglish) {
+				output = output + 'Pisces ';
+			}
+			if (this.settings.astroIncludeEmoji) {
+				output = output + '♓';
+			}
+			input = input.replace('Pisces', output);
+		}
+		return input;
+	}
 	UpdateEraLegisVars(EraLegisOutput : string) {
 		let formatted = EraLegisOutput.replace('Year', 'Anno');
 		formatted = formatted.replace('of the New Aeon', 'A.N.');
-		// Adds a corresponding astrological emoji after the zodiac word
-		formatted = formatted.replace('Aries', 'Aries ♈');
-		formatted = formatted.replace('Taurus', 'Taurus ♉');
-		formatted = formatted.replace('Gemini', 'Gemini ♊');
-		formatted = formatted.replace('Cancer', 'Cancer ♋');
-		formatted = formatted.replace('Leo', 'Leo ♌');
-		formatted = formatted.replace('Virgo', 'Virgo ♍');
-		formatted = formatted.replace('Libra', 'Libra ♎');
-		formatted = formatted.replace('Scorpio', 'Scorpio ♏');
-		formatted = formatted.replace('Sagittarius', 'Sagittarius ♐');
-		formatted = formatted.replace('Capricorn', 'Capricorn ♑');
-		formatted = formatted.replace('Aquarius', 'Aquarius ♒');
-		formatted = formatted.replace('Pisces', 'Pisces ♓');
+		// Replaces astro signs string with string according to settings
+		formatted = this.UpdateAstroSigns(formatted);
 		// Split formatted string into an array by : symbol
 		const formattedArray = formatted.split(':');
 		// solis is the first part of the array
@@ -212,7 +334,7 @@ export default class MagickJournalPlugin extends Plugin {
 		weatherParams['latitude'] = this.GeoLocation.lat;
 		weatherParams['longitude'] = this.GeoLocation.lon;
 		weatherParams['hourly'] = 'temperature_2m,pressure_msl,surface_pressure,weathercode';
-		weatherParams['temperature_unit'] = 'fahrenheit';
+		weatherParams['temperature_unit'] = this.settings.weatherTempUnits.toLowerCase();
 		weatherParams['windspeed_unit'] = 'mph';
 		weatherParams['precipitation_unit'] = 'inch';
 		weatherParams['timezone'] = this.GeoLocation.timezone;
@@ -223,10 +345,19 @@ export default class MagickJournalPlugin extends Plugin {
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
 			const last = data['hourly']['temperature_2m'].length - 1;
-			const Fahrenheit = data['hourly']['temperature_2m'][last];
-			const Inches = this.MbrToInches(data['hourly']['pressure_msl'][last]).toFixed(2);
+			const temperature = data['hourly']['temperature_2m'][last].toFixed(Number(this.settings.weatherTempDecimalPlaces));
+			let pressure = '';
+			if (this.settings.weatherPressureUnits.toLowerCase() != 'mbar') {
+				pressure = this.MbrToInches(data['hourly']['pressure_msl'][last]).toFixed(2) + 'in';
+			} else {
+				pressure = data['hourly']['pressure_msl'][last].toFixed(2) + 'mbar';
+			}
 			const WeatherDescription = this.WeatherCodeToString(data['hourly']['weathercode'][last]);
-			this.WeatherDescription = WeatherDescription + ', ' + Fahrenheit + '°F, ' + Inches + 'in';
+			if (this.settings.weatherTempUnits.toLowerCase() == 'celsius') {
+				this.WeatherDescription = WeatherDescription + ', ' + temperature + '°C, ' + pressure;
+			} else {
+				this.WeatherDescription = WeatherDescription + ', ' + temperature + '°F, ' + pressure;
+			}
 		});
 	}
 
@@ -310,7 +441,7 @@ export default class MagickJournalPlugin extends Plugin {
 				editor.replaceRange(
 					fullHeading,
 					editor.getCursor()
-				);
+				)
 				const lineCount = fullHeading.split('\n').length;
 				const offset = fullHeading.split('\n')[fullHeading.split('\n').length-2].length;
 				editor.setCursor(editor.getCursor().line + lineCount - 2, offset );
@@ -486,9 +617,9 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.createEl("br");
 		containerEl.createEl("br");
 
-		const field_settings = containerEl.createEl("div");
-		field_settings.createEl("div", { text: "Default Fields", cls: "settings_section_title" });
-		field_settings.createEl("small", { text: "Defaults for Fields Created", cls: "settings_section_description" });
+		const header_field_settings = containerEl.createEl("div");
+		header_field_settings.createEl("div", { text: "Default Fields", cls: "settings_section_title" });
+		header_field_settings.createEl("small", { text: "Defaults for Fields Created", cls: "settings_section_description" });
 
 		new Setting(containerEl)
 			.setName('Header Fields')
@@ -503,6 +634,88 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					this.plugin.settings.headerFields = value;
 					await this.plugin.saveSettings();
 				}));
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const astro_field_settings = containerEl.createEl("div");
+		astro_field_settings.createEl("div", { text: "Astro Field", cls: "settings_section_title" });
+		astro_field_settings.createEl("small", { text: "Astro Field Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Emojis in Astro Field')
+			.setDesc('Include emojis in the astro field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include emojis in the astro field.')
+				.setValue(this.plugin.settings.astroIncludeEmoji)
+				.onChange(async (value) => {
+					this.plugin.settings.astroIncludeEmoji = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('English Names in Astro Field')
+			.setDesc('Include english sign names in the astro field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include english sign names in the astro field.')
+				.setValue(this.plugin.settings.astroIncludeEnglish)
+				.onChange(async (value) => {
+					this.plugin.settings.astroIncludeEnglish = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const weather_field_settings = containerEl.createEl("div");
+		weather_field_settings.createEl("div", { text: "Weather Field", cls: "settings_section_title" });
+		weather_field_settings.createEl("small", { text: "Weather Field Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Temperature Decimal Places')
+			.setDesc('Number of decimal places to include in weather field temperature output.')
+			.setClass("setting")
+			.addText(textarea => textarea
+				.setValue(this.plugin.settings.weatherTempDecimalPlaces)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherTempDecimalPlaces = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Temperature Units')
+			.setDesc('Choose between Fahrenheit and Celsius for weather output.')
+			.setClass("setting")
+			.addDropdown(dropDown => {
+				dropDown.addOption('Celsius', 'Celsius');
+				dropDown.addOption('Fahrenheit', 'Fahrenheit');
+				dropDown.setValue(this.plugin.settings.weatherTempUnits);
+				dropDown.onChange(async (value) =>	{
+					this.plugin.settings.weatherTempUnits = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Air Pressure Units')
+			.setDesc('Choose between Inches and Mbr for weather output.')
+			.setClass("setting")
+			.addDropdown(dropDown => {
+				dropDown.addOption('Inches', 'Inches');
+				dropDown.addOption('Mbar', 'Mbar');
+				dropDown.setValue(this.plugin.settings.weatherPressureUnits);
+				dropDown.onChange(async (value) =>	{
+					this.plugin.settings.weatherPressureUnits = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				});
+			});
 	}
 }
 

@@ -39,7 +39,11 @@ Example Output:
 
 ## Settings
 
+### Default Entries
+
 **Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
+
+### Header 
 
 **Header Fields**: Comma separated fields to populate full header with. Options are:
 
@@ -58,6 +62,20 @@ Example Output:
 Example Configuration:
 
 	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other
+
+### Astro
+
+**Emojis in Astro Field**: Whether to use emojis in the astrological header.
+
+**English Names in Astro Field**: Whether to use English sign names in the astrological header.
+
+### Weather
+
+**Temperature Decimal Places**: Number of decimal places to display for temperature.
+
+**Temperature Units**: Units to display temperature in, Celsius or Fahrenheit.
+
+**Air Pressure Units**: Units to display air pressure in, inches or millibars.
 
 
 ## About

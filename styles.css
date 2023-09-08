@@ -22,19 +22,3 @@ If your plugin does not need CSS, delete this file.
 .setting {
 	padding: 10px;
 }
-
-.setting .textarea {
-	padding: 100px 150px;           /* Adds space inside the textbox */
-	width: 300px;
-	height: 300px;
-}
-
-/* Change border color when textbox is focused */
-.setting .textarea:focus {
-	border-color: #0056b3;
-}
-
-/* Optional: Add some style for when a user hovers over the textbox */
-.setting .textarea:hover {
-	border-color: #0056b3;
-}
