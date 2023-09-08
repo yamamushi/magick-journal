@@ -4,8 +4,9 @@ import * as SunCalc from 'suncalc';
 interface MagickJournalSettings {
 	defaultLocation: string;
 	headerFields: string;
-	astroIncludeEmoji: boolean,
-	astroIncludeEnglish: boolean,
+	magickDateFields: string,
+	astrologyIncludeEmoji: boolean,
+	astrologyIncludeEnglish: boolean,
 	weatherUseGeolocation: boolean,
 	weatherGeolocation: string,
 	weatherTempDecimalPlaces: string,
@@ -16,8 +17,9 @@ interface MagickJournalSettings {
 const DEFAULT_SETTINGS: MagickJournalSettings = {
 	defaultLocation: '',
 	headerFields: 'Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other',
-	astroIncludeEmoji: true,
-	astroIncludeEnglish: true,
+	magickDateFields: 'Astro, Anno, Day, EV, Time',
+	astrologyIncludeEmoji: true,
+	astrologyIncludeEnglish: true,
 	weatherUseGeolocation: true,
 	weatherGeolocation: '',
 	weatherTempDecimalPlaces: '2',
@@ -134,120 +136,120 @@ export default class MagickJournalPlugin extends Plugin {
 	UpdateAstroSigns(input : string): string {
 		if (input.includes('Aries')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Aries ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♈';
 			}
 			input = input.replace('Aries', output);
 		}
 		if (input.includes('Taurus')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Taurus ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♉';
 			}
 			input = input.replace('Taurus', output);
 		}
 		if (input.includes('Gemini')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Gemini ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♊';
 			}
 			input = input.replace('Gemini', output);
 		}
 		if (input.includes('Cancer')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Cancer ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♋';
 			}
 			input = input.replace('Cancer', output);
 		}
 		if (input.includes('Leo')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Leo ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♌';
 			}
 			input = input.replace('Leo', output);
 		}
 		if (input.includes('Virgo')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Virgo ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♍';
 			}
 			input = input.replace('Virgo', output);
 		}
 		if (input.includes('Libra')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Libra ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♎';
 			}
 			input = input.replace('Libra', output);
 		}
 		if (input.includes('Scorpio')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Scorpio ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♏';
 			}
 			input = input.replace('Scorpio', output);
 		}
 		if (input.includes('Sagittarius')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Sagittarius ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♐';
 			}
 			input = input.replace('Sagittarius', output);
 		}
 		if (input.includes('Capricorn')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Capricorn ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♑';
 			}
 			input = input.replace('Capricorn', output);
 		}
 		if (input.includes('Aquarius')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Aquarius ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♒';
 			}
 			input = input.replace('Aquarius', output);
 		}
 		if (input.includes('Pisces')) {
 			let output = '';
-			if (this.settings.astroIncludeEnglish) {
+			if (this.settings.astrologyIncludeEnglish) {
 				output = output + 'Pisces ';
 			}
-			if (this.settings.astroIncludeEmoji) {
+			if (this.settings.astrologyIncludeEmoji) {
 				output = output + '♓';
 			}
 			input = input.replace('Pisces', output);
@@ -274,14 +276,15 @@ export default class MagickJournalPlugin extends Plugin {
 		this.AstroHeading = this.SunEraLegis + ':' + this.MoonEraLegis;
 	}
 
-	GetFullHeading():string {
-
-		let output = ''
-
+	GetMagickDate(): string {
 		// First we get the default fields from the settings
-		const defaultFields = this.settings.headerFields.toLowerCase().split(',');
-		// Then we loop through each field and add it to the output
-		defaultFields.forEach(function(field) {
+		const magickDateFields = this.settings.magickDateFields.toLowerCase().split(',');
+		return this.ParseFieldListIntoString(magickDateFields).replace(/\*/g, '');
+	}
+
+	ParseFieldListIntoString(input : string[]): string {
+		let output = '';
+		input.forEach(function(field) {
 			field = field.trim();
 			if (field == "astro") {
 				output = output + this.AstroHeading + '\n';
@@ -307,7 +310,15 @@ export default class MagickJournalPlugin extends Plugin {
 					.join(' ') + ':** \n';
 			}
 		}, this);
-		return output
+		// @ts-ignore
+		return output;
+	}
+
+	GetFullHeading():string {
+		// First we get the default fields from the settings
+		const defaultFields = this.settings.headerFields.toLowerCase().split(',');
+		// Then we loop through each field and add it to the output
+		return this.ParseFieldListIntoString(defaultFields);
 	}
 
 	GetExtraFields():string {
@@ -344,15 +355,14 @@ export default class MagickJournalPlugin extends Plugin {
 			weatherParams['latitude'] = this.GeoLocation.lat;
 			weatherParams['longitude'] = this.GeoLocation.lon;
 		}
-		console.log(weatherParams['longitude']);
-		console.log(weatherParams['latitude']);
+
 		weatherParams['temperature_unit'] = this.settings.weatherTempUnits.toLowerCase();
 		weatherParams['windspeed_unit'] = 'mph';
 		weatherParams['precipitation_unit'] = 'inch';
 		weatherParams['timezone'] = this.GeoLocation.timezone;
 
 		const weatherURL = new URL('https://api.open-meteo.com/v1/forecast');
-		console.log(weatherURL)
+		//console.log(weatherURL)
 		// @ts-ignore
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
@@ -448,7 +458,7 @@ export default class MagickJournalPlugin extends Plugin {
 			// Called when the user clicks the icon.
 			this.ReloadData();
 			this.GetFullHeading();
-			new Notice(this.ThelemicDate.trim());
+			new Notice(this.GetMagickDate());
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -657,35 +667,58 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const magickdate_field_settings = containerEl.createEl("div");
+		magickdate_field_settings.createEl("div", { text: "Magick Date", cls: "settings_section_title" });
+		magickdate_field_settings.createEl("small", { text: "Magick Date Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Magick Date Fields')
+			.setDesc('Comma separated fields to populate magick date output.' +
+				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, and Blank to insert a blank line.' +
+				' Unrecognized options will be inserted as additional fields.')
+			.setClass("setting")
+			.addTextArea(textarea => textarea
+				.setPlaceholder('Enter default header fields separated by a comma.')
+				.setValue(this.plugin.settings.magickDateFields)
+				.onChange(async (value) => {
+					this.plugin.settings.magickDateFields = value;
+					await this.plugin.saveSettings();
+				}));
+
+
 		containerEl.createEl("br");
 		containerEl.createEl("br");
 
 		const astro_field_settings = containerEl.createEl("div");
-		astro_field_settings.createEl("div", { text: "Astro Field", cls: "settings_section_title" });
-		astro_field_settings.createEl("small", { text: "Astro Field Settings", cls: "settings_section_description" });
+		astro_field_settings.createEl("div", { text: "Astrology Field", cls: "settings_section_title" });
+		astro_field_settings.createEl("small", { text: "Astrology Field Settings", cls: "settings_section_description" });
 
 		new Setting(containerEl)
-			.setName('Emojis in Astro Field')
-			.setDesc('Include emojis in the astro field.')
+			.setName('Emojis in Astrology Field')
+			.setDesc('Include emojis in the Astrology Field.')
 			.setClass("setting")
 			.addToggle(textarea => textarea
-				.setTooltip('Include emojis in the astro field.')
-				.setValue(this.plugin.settings.astroIncludeEmoji)
+				.setTooltip('Include emojis in the astrology field.')
+				.setValue(this.plugin.settings.astrologyIncludeEmoji)
 				.onChange(async (value) => {
-					this.plugin.settings.astroIncludeEmoji = value;
+					this.plugin.settings.astrologyIncludeEmoji = value;
 					await this.plugin.saveSettings();
 					this.plugin.ReloadData();
 				}));
 
 		new Setting(containerEl)
-			.setName('English Names in Astro Field')
-			.setDesc('Include english sign names in the astro field.')
+			.setName('English Names in Astrology Field')
+			.setDesc('Include english sign names in the astrology field.')
 			.setClass("setting")
 			.addToggle(textarea => textarea
-				.setTooltip('Include english sign names in the astro field.')
-				.setValue(this.plugin.settings.astroIncludeEnglish)
+				.setTooltip('Include english sign names in the astrology field.')
+				.setValue(this.plugin.settings.astrologyIncludeEnglish)
 				.onChange(async (value) => {
-					this.plugin.settings.astroIncludeEnglish = value;
+					this.plugin.settings.astrologyIncludeEnglish = value;
 					await this.plugin.saveSettings();
 					this.plugin.ReloadData();
 				}));

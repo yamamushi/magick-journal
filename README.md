@@ -57,6 +57,10 @@ Example Output:
 * **Weather**: To insert the current local weather
 * **Blank**: To insert a blank line.
 
+### Magic Date
+
+**Magic Date Fields**: Comma separated fields to populate the magic date with. Available options are the same as for the header fields.
+
 **Unrecognized options will be inserted as additional fields.**
 
 Example Configuration:
