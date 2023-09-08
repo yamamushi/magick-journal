@@ -71,11 +71,15 @@ Example Configuration:
 
 ### Weather
 
+**IP Weather Geolocation**: Whether to use IP geolocation to determine weather location. If disabled, the configured coordinates will be used.
+
+**Geolocation Coordinates**: The coordinates to use for weather lookups if IP geolocation is disabled. This should be in the format `latitude,longitude` (e.g. `38.8339,-104.8214`).
+
 **Temperature Decimal Places**: Number of decimal places to display for temperature.
 
 **Temperature Units**: Units to display temperature in, Celsius or Fahrenheit.
 
-**Air Pressure Units**: Units to display air pressure in, inches or millibars.
+**Air Pressure Units**: Units to display air pressure in, Inches or Millibars.
 
 
 ## About
