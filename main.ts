@@ -6,6 +6,8 @@ interface MagickJournalSettings {
 	headerFields: string;
 	astroIncludeEmoji: boolean,
 	astroIncludeEnglish: boolean,
+	weatherUseGeolocation: boolean,
+	weatherGeolocation: string,
 	weatherTempDecimalPlaces: string,
 	weatherTempUnits: string,
 	weatherPressureUnits: string,
@@ -16,6 +18,8 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	headerFields: 'Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other',
 	astroIncludeEmoji: true,
 	astroIncludeEnglish: true,
+	weatherUseGeolocation: true,
+	weatherGeolocation: '',
 	weatherTempDecimalPlaces: '2',
 	weatherTempUnits: 'fahrenheit',
 	weatherPressureUnits: 'inches',
@@ -328,37 +332,55 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.EVDate
 	}
 
-	UpdateWeatherDescription() {
-		const weatherParams = { latitude: '', longitude: '', hourly: '', temperature_unit: '',
-			windspeed_unit: '', precipitation_unit: '', timezone: '', forecast_days: 0};
-		weatherParams['latitude'] = this.GeoLocation.lat;
-		weatherParams['longitude'] = this.GeoLocation.lon;
-		weatherParams['hourly'] = 'temperature_2m,pressure_msl,surface_pressure,weathercode';
+	UpdateWeatherDescription(): string {
+		const weatherParams = { latitude: '', longitude: '',
+			hourly: 'temperature_2m,pressure_msl,surface_pressure,weathercode', temperature_unit: '',
+			windspeed_unit: 'mph', precipitation_unit: '', timezone: '', forecast_days: 1, current_weather: 'true'};
+		if (!this.settings.weatherUseGeolocation) {
+			const fields = this.settings.weatherGeolocation.split(',');
+			weatherParams['latitude'] = fields[0];
+			weatherParams['longitude'] = fields[1];
+		} else {
+			weatherParams['latitude'] = this.GeoLocation.lat;
+			weatherParams['longitude'] = this.GeoLocation.lon;
+		}
+		console.log(weatherParams['longitude']);
+		console.log(weatherParams['latitude']);
 		weatherParams['temperature_unit'] = this.settings.weatherTempUnits.toLowerCase();
 		weatherParams['windspeed_unit'] = 'mph';
 		weatherParams['precipitation_unit'] = 'inch';
 		weatherParams['timezone'] = this.GeoLocation.timezone;
-		weatherParams['forecast_days'] = 1;
 
 		const weatherURL = new URL('https://api.open-meteo.com/v1/forecast');
+		console.log(weatherURL)
 		// @ts-ignore
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
-			const last = data['hourly']['temperature_2m'].length - 1;
-			const temperature = data['hourly']['temperature_2m'][last].toFixed(Number(this.settings.weatherTempDecimalPlaces));
-			let pressure = '';
-			if (this.settings.weatherPressureUnits.toLowerCase() != 'mbar') {
-				pressure = this.MbrToInches(data['hourly']['pressure_msl'][last]).toFixed(2) + 'in';
-			} else {
-				pressure = data['hourly']['pressure_msl'][last].toFixed(2) + 'mbar';
+			const temperature = data['current_weather']['temperature'].toFixed(Number(this.settings.weatherTempDecimalPlaces));
+			let index = '';
+			const currentTime = data['current_weather']['time'];
+			// loop through hourly times to find the index of the current time
+			for (let i = 0; i < data['hourly']['time'].length; i++) {
+				if (data['hourly']['time'][i] == currentTime) {
+					index = String(i);
+				}
 			}
-			const WeatherDescription = this.WeatherCodeToString(data['hourly']['weathercode'][last]);
+
+			let pressure: string;
+			if (this.settings.weatherPressureUnits.toLowerCase() != 'mbar') {
+				pressure = this.MbrToInches(data['hourly']['pressure_msl'][index]).toFixed(2) + 'in';
+			} else {
+				pressure = data['hourly']['pressure_msl'][index].toFixed(2) + 'mbar';
+			}
+
+			const WeatherDescription = this.WeatherCodeToString(data['current_weather']['weathercode']);
 			if (this.settings.weatherTempUnits.toLowerCase() == 'celsius') {
 				this.WeatherDescription = WeatherDescription + ', ' + temperature + '°C, ' + pressure;
 			} else {
 				this.WeatherDescription = WeatherDescription + ', ' + temperature + '°F, ' + pressure;
 			}
 		});
+		return this.WeatherDescription;
 	}
 
 	WeatherCodeToString(code : number) : string {
@@ -606,7 +628,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 			.setName('Default Location')
 			.setDesc('Default location for header')
 			.setClass("setting")
-			.addTextArea(textarea => textarea
+			.addText(text => text
 				.setPlaceholder('Enter a location')
 				.setValue(this.plugin.settings.defaultLocation)
 				.onChange(async (value) => {
@@ -676,6 +698,31 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		weather_field_settings.createEl("small", { text: "Weather Field Settings", cls: "settings_section_description" });
 
 		new Setting(containerEl)
+			.setName('IP Weather Geolocation')
+			.setDesc('Use IP based geolocation, disable to use manually entered coordinates.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Use manual weather geolocation instead of IP based geolocation.')
+				.setValue(this.plugin.settings.weatherUseGeolocation)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherUseGeolocation = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Geolocation Coordinates')
+			.setDesc('Manually enter your geolocation latitude and longitude, comma separated, for more accurate weather data.')
+			.setClass("setting")
+			.addText(textarea => textarea
+				.setValue(this.plugin.settings.weatherGeolocation)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherGeolocation = value;
+					this.plugin.UpdateWeatherDescription();
+					await this.plugin.saveSettings();
+				}).then(() => {this.plugin.ReloadData()}));
+
+		new Setting(containerEl)
 			.setName('Temperature Decimal Places')
 			.setDesc('Number of decimal places to include in weather field temperature output.')
 			.setClass("setting")
@@ -684,7 +731,6 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.weatherTempDecimalPlaces = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
 				}));
 
 		new Setting(containerEl)
@@ -713,7 +759,6 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				dropDown.onChange(async (value) =>	{
 					this.plugin.settings.weatherPressureUnits = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
 				});
 			});
 	}
