@@ -4,7 +4,9 @@ This plugin adds a number of tools for practitioners of Magick to Obsidian to ai
 
 ## Commands
 
-full-heading: Inserts a full heading with the current date and time.
+It's recommended to add hotkeys for these commands if you plan on using them often.
+
+full-heading: Inserts the full heading as configured in the options for the plugin
 
 Example Output:
 
@@ -19,21 +21,21 @@ Example Output:
 	**Location:** Home, Colorado Springs CO
 	**Current Weather:** Clear Sky, 61.4°F, 29.83in
 
-insert-astro: 
+insert-astro: Inserts the astrological header with the Sun and Moon positions.
 
-insert-time:
+insert-time: Inserts the current time and timezone
 
-insert-extra-fields:
+insert-extra-fields: Inserts the extra fields as configured in the options for the plugin.
 
-insert-date-ev:
+insert-date-ev: Inserts the current EV date.
 
-insert-date-an:
+insert-date-an: Inserts the current New Aeon date.
 
-insert-day:
+insert-day: Inserts the latin day of the week.
 
-insert-weather:
+insert-weather: Inserts current local weather conditions, temperature and air pressure.
 
-insert-moon:
+insert-moon: Inserts current phase of the moon and illumination percentage.
 
 ## Settings
 
@@ -44,7 +46,4 @@ Additional Default Fields
 
 ## Todo
 
-- [ ] Configure location to either populate based on filled in settings, or from geolocation if blank.
 - [ ] Add setting to configure default fields
-- [ ] Add additional documentation.
-- [ ] Document Settings

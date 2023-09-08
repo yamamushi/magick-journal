@@ -1,5 +1,6 @@
-import { App, Editor, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {App, Editor, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import * as SunCalc from 'suncalc';
+
 interface MagickJournalSettings {
 	defaultLocation: string;
 	additionalDefaultFields: string;
@@ -106,19 +107,23 @@ export default class MagickJournalPlugin extends Plugin {
 				return text;
 			});
 	}
+
+	updateTodaysDate() {
+		this.DayOfWeek = new Date().toLocaleDateString('en-US', {weekday: 'long'});
+		this.DayOfWeek = this.DayOfWeek.replace('Sunday', 'dies Solis ☉');
+		this.DayOfWeek = this.DayOfWeek.replace('Monday', 'dies Lunae ☽');
+		this.DayOfWeek = this.DayOfWeek.replace('Tuesday', 'dies Martis ♂');
+		this.DayOfWeek = this.DayOfWeek.replace('Wednesday', 'dies Mercurii ☿');
+		this.DayOfWeek = this.DayOfWeek.replace('Thursday', 'dies Iovis ♃');
+		this.DayOfWeek = this.DayOfWeek.replace('Friday', 'dies Veneris ♀');
+		this.DayOfWeek = this.DayOfWeek.replace('Saturday', 'dies Saturni ♄');
+	}
 	updateFormattedDate(RawDate : string) {
 		// replace the string 'Year' with 'Anno' in the string
 		let formatted = RawDate.replace('Year', 'Anno');
 		// replace 'of the New Aeon' with A.N.
 		formatted = formatted.replace('of the New Aeon', 'A.N.');
-		// Replace day of the week in English with full latin name and symbol
-		formatted = formatted.replace('Sunday', 'dies Solis ☉');
-		formatted = formatted.replace('Monday', 'dies Lunae ☽');
-		formatted = formatted.replace('Tuesday', 'dies Martis ♂');
-		formatted = formatted.replace('Wednesday', 'dies Mercurii ☿');
-		formatted = formatted.replace('Thursday', 'dies Iovis ♃');
-		formatted = formatted.replace('Friday', 'dies Veneris ♀');
-		formatted = formatted.replace('Saturday', 'dies Saturni ♄');
+		// Ignore day of week
 		// Adds a corresponding astrological emoji after the zodiac word
 		formatted = formatted.replace('Aries', 'Aries ♈');
 		formatted = formatted.replace('Taurus', 'Taurus ♉');
@@ -138,8 +143,9 @@ export default class MagickJournalPlugin extends Plugin {
 		this.Solis = formattedArray[0];
 		// moon is the second part of the array
 		this.MoonAstro = formattedArray[1];
-		// dayOfWeek is the second part of the array
-		this.DayOfWeek = formattedArray[2].trim();
+		// UpdateDayOfWeek
+		this.updateTodaysDate();
+		//this.DayOfWeek = formattedArray[2].trim();
 		// anno is the third part of the array
 		this.Anno = formattedArray[3].trim();
 		// Add ** to the front and back of anno
@@ -372,6 +378,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-day",
 			name: "Insert Day",
 			editorCallback: (editor: Editor) => {
+				this.updateTodaysDate();
 				editor.replaceRange(
 					this.DayOfWeek + '\n',
 					editor.getCursor()
