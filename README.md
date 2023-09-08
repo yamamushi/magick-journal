@@ -41,9 +41,28 @@ Example Output:
 
 **Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
 
-**Additional Default Fields**: Additional fields to include in the full header output separated by commas. This defaults to "Other", but you can add any fields you want here.
+**Header Fields**: Comma separated fields to populate full header with. Options are:
+
+* **Astro**: To insert the current astrological header from EraLegis
+* **Anno**: To insert the current New Aeon date
+* **Day**: To insert the current latin day of the week
+* **EV**: To insert the current common era date 
+* **Time**: To insert the current local time and timezone
+* **Moon**: To insert the current phase of the moon and illumination percentage
+* **Location**: To insert the configured Default Location
+* **Weather**: To insert the current local weather
+* **Blank**: To insert a blank line.
+
+**Unrecognized options will be inserted as additional fields.**
+
+Example Configuration:
+
+	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other
 
 
-## Todo
+## About
 
-- [ ] Add setting to configure default fields
+magick-journal pulls the current astrological correspondence and Thelemic date from https://eralegis.info/ and the current weather from https://open-meteo.com/.
+
+Both services are provided free of charge, but if you find this plugin useful, please consider donating to them (especially EraLegis ❤️).
+

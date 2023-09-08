@@ -3,28 +3,27 @@ import * as SunCalc from 'suncalc';
 
 interface MagickJournalSettings {
 	defaultLocation: string;
-	additionalDefaultFields: string;
+	headerFields: string;
 }
 
 const DEFAULT_SETTINGS: MagickJournalSettings = {
 	defaultLocation: '',
-	additionalDefaultFields: 'Other'
+	headerFields: 'Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other'
 }
 
 export default class MagickJournalPlugin extends Plugin {
 	settings: MagickJournalSettings;
 	AstroHeading = '';
 	SolarData = {'moon_illumination': '', 'moon_phase': ''};
-	Solis = '';
-	MoonAstro = '';
+	SunEraLegis = '';
+	MoonEraLegis = '';
 	MoonPhase = '';
-	DayOfWeek = '';
+	LatinDayOfWeek = '';
 	WeatherDescription = '';
-	Anno = '';
-	TodayDateString = '';
+	NewAeonYear = '';
+	EVDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
 	ThelemicDate = '';
-
 	ReloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
 		this.SolarData['moon_phase'] = this.MoonPhaseToName(SunCalc.getMoonIllumination(date)['phase']);
@@ -63,8 +62,7 @@ export default class MagickJournalPlugin extends Plugin {
 			return '';
 		}
 	}
-	ReloadEraLegis(){
-
+	ReloadData(){
 		const params = {format: 'txt', tz: '', lang: '', location: ''};
 
 		const tzOffset = new Date().getTimezoneOffset();
@@ -84,9 +82,9 @@ export default class MagickJournalPlugin extends Plugin {
 					this.GeoLocation = data;
 					params['location'] = this.GeoLocation.lat + ':' + this.GeoLocation.lon;
 					this.ReloadSunMoonData(today);
-					this.UpdateWeatherString();
+					this.UpdateWeatherDescription();
 					this.fetchEraLegis(params).then(data => {
-						this.updateFormattedDate(data);
+						this.UpdateEraLegisVars(data);
 					});
 				}
 			})
@@ -108,22 +106,20 @@ export default class MagickJournalPlugin extends Plugin {
 			});
 	}
 
-	updateTodaysDate() {
-		this.DayOfWeek = new Date().toLocaleDateString('en-US', {weekday: 'long'});
-		this.DayOfWeek = this.DayOfWeek.replace('Sunday', 'dies Solis ☉');
-		this.DayOfWeek = this.DayOfWeek.replace('Monday', 'dies Lunae ☽');
-		this.DayOfWeek = this.DayOfWeek.replace('Tuesday', 'dies Martis ♂');
-		this.DayOfWeek = this.DayOfWeek.replace('Wednesday', 'dies Mercurii ☿');
-		this.DayOfWeek = this.DayOfWeek.replace('Thursday', 'dies Iovis ♃');
-		this.DayOfWeek = this.DayOfWeek.replace('Friday', 'dies Veneris ♀');
-		this.DayOfWeek = this.DayOfWeek.replace('Saturday', 'dies Saturni ♄');
+	GetLatinDayOfWeek() {
+		this.LatinDayOfWeek = new Date().toLocaleDateString('en-US', {weekday: 'long'});
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Sunday', 'dies Solis ☉');
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Monday', 'dies Lunae ☽');
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Tuesday', 'dies Martis ♂');
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Wednesday', 'dies Mercurii ☿');
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Thursday', 'dies Iovis ♃');
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Friday', 'dies Veneris ♀');
+		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Saturday', 'dies Saturni ♄');
+		return this.LatinDayOfWeek;
 	}
-	updateFormattedDate(RawDate : string) {
-		// replace the string 'Year' with 'Anno' in the string
-		let formatted = RawDate.replace('Year', 'Anno');
-		// replace 'of the New Aeon' with A.N.
+	UpdateEraLegisVars(EraLegisOutput : string) {
+		let formatted = EraLegisOutput.replace('Year', 'Anno');
 		formatted = formatted.replace('of the New Aeon', 'A.N.');
-		// Ignore day of week
 		// Adds a corresponding astrological emoji after the zodiac word
 		formatted = formatted.replace('Aries', 'Aries ♈');
 		formatted = formatted.replace('Taurus', 'Taurus ♉');
@@ -140,56 +136,77 @@ export default class MagickJournalPlugin extends Plugin {
 		// Split formatted string into an array by : symbol
 		const formattedArray = formatted.split(':');
 		// solis is the first part of the array
-		this.Solis = formattedArray[0];
+		this.SunEraLegis = formattedArray[0];
 		// moon is the second part of the array
-		this.MoonAstro = formattedArray[1];
-		// UpdateDayOfWeek
-		this.updateTodaysDate();
-		//this.DayOfWeek = formattedArray[2].trim();
+		this.MoonEraLegis = formattedArray[1];
+		// formattedArray[2] is Day of the Week which we process elsewhere
 		// anno is the third part of the array
-		this.Anno = formattedArray[3].trim();
+		this.NewAeonYear = formattedArray[3].trim();
 		// Add ** to the front and back of anno
-		this.Anno = '**' + this.Anno + '**';
+		this.NewAeonYear = '**' + this.NewAeonYear + '**';
 		// First part of output is astrological with a newline after
-		this.AstroHeading = this.Solis + ':' + this.MoonAstro + '\n';
+		this.AstroHeading = this.SunEraLegis + ':' + this.MoonEraLegis;
 	}
 
-	getFullHeading():string {
-		let output = this.AstroHeading;
-		// Second part of output is anno with a newline after
-		output += this.Anno + '\n';
-		// Third part of output is dayOfWeek with a newline after
-		output += this.DayOfWeek + '\n';
-		// todaysDate is the current date in MM-DD-YYYY format
-		this.UpdateTodaysDate();
-		// Fourth part of output is todaysDate with 'e.v.' appended and a newline after
-		output += this.TodayDateString+'\n';
-		this.ThelemicDate = output;
+	GetFullHeading():string {
 
-		const time = '**Time:** '+this.formatAMPM(new Date())+'\n';
-		const moon = '**Moon:** ' +this.MoonPhase+'\n';
-		const location = '**Location:** ' + this.settings.defaultLocation + '\n';
-		const currentWeather = '**Current Weather:** ' + this.WeatherDescription + '\n';
-		output = output + time + moon + location + currentWeather;
+		let output = ''
 
-		// For every additional field in the settings, add it to the output
-		const additionalFields = this.settings.additionalDefaultFields.split(',');
-		additionalFields.forEach(function(field) {
-			output = output + '**' + field + ':** \n';
-		});
+		// First we get the default fields from the settings
+		const defaultFields = this.settings.headerFields.toLowerCase().split(',');
+		// Then we loop through each field and add it to the output
+		defaultFields.forEach(function(field) {
+			field = field.trim();
+			if (field == "astro") {
+				output = output + this.AstroHeading + '\n';
+			} else if (field == "anno") {
+				output = output + this.NewAeonYear + '\n';
+			} else if (field == "day") {
+				output = output + this.GetLatinDayOfWeek() + '\n';
+			} else if (field == "ev") {
+				output = output + this.GetEVDate() + '\n';
+			} else if (field == "time") {
+				output = output + '**Time:** '+this.formatAMPM(new Date())+'\n';
+			} else if (field == "moon") {
+				output = output + '**Moon:** ' + this.MoonPhase + '\n';
+			} else if (field == "location") {
+				output = output + '**Location:** ' + this.settings.defaultLocation + '\n';
+			} else if (field == "weather") {
+				output = output + '**Current Weather:** ' + this.WeatherDescription + '\n';
+			} else if (field == "blank") {
+				output = output + '\n';
+			} else {
+				output = output + '**' + field.split(' ')
+					.map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+					.join(' ') + ':** \n';
+			}
+		}, this);
 		return output
 	}
 
-	UpdateTodaysDate() {
-		this.TodayDateString = new Date().getDate() + '-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear();
-		this.TodayDateString = this.TodayDateString + ' e.v.\n';
+	GetExtraFields():string {
+		let output = ''
+		// First we get the default fields from the settings
+		const defaultFields = this.settings.headerFields.toLowerCase().split(',');
+		// Then we loop through each field and add it to the output
+		defaultFields.forEach(function(field) {
+			field = field.trim();
+			if (field != "astro" && field != "anno" && field != "day" && field != "ev" && field != "time" && field != "moon" && field != "location" && field != "weather" && field != "blank") {
+				output = output + '**' + field.split(' ')
+					.map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+					.join(' ') + ':** \n';
+			}
+		}, this);
+		return output
 	}
 
-	UpdateWeatherString() {
-    //https://api.open-meteo.com/v1/forecast?latitude=lat&
-		// longitude=long&hourly=temperature_2m,pressure_msl,surface_pressure
-		// &temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&
-		// timezone=America%2FDenver&forecast_days=1
+	GetEVDate() {
+		this.EVDate = new Date().getDate() + '-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear();
+		this.EVDate = this.EVDate + ' e.v.';
+		return this.EVDate
+	}
+
+	UpdateWeatherDescription() {
 		const weatherParams = { latitude: '', longitude: '', hourly: '', temperature_unit: '',
 			windspeed_unit: '', precipitation_unit: '', timezone: '', forecast_days: 0};
 		weatherParams['latitude'] = this.GeoLocation.lat;
@@ -215,31 +232,31 @@ export default class MagickJournalPlugin extends Plugin {
 
 	WeatherCodeToString(code : number) : string {
 		/*
-		Code	Description
-0	Clear sky
-1, 2, 3	Mainly clear, partly cloudy, and overcast
-45, 48	Fog and depositing rime fog
-51, 53, 55	Drizzle: Light, moderate, and dense intensity
-56, 57	Freezing Drizzle: Light and dense intensity
-61, 63, 65	Rain: Slight, moderate and heavy intensity
-66, 67	Freezing Rain: Light and heavy intensity
-71, 73, 75	Snow fall: Slight, moderate, and heavy intensity
-77	Snow grains
-80, 81, 82	Rain showers: Slight, moderate, and violent
-85, 86	Snow showers slight and heavy
-95 *	Thunderstorm: Slight or moderate
-96, 99 *	Thunderstorm with slight and heavy hail
+		Code		Description
+		0			Clear Sky
+		1, 2, 3		Mainly Clear, Partly Cloudy, and Overcast
+		45, 48		Fog and Depositing Rime Fog
+		51, 53, 55	Drizzle: Light, Moderate, and Dense intensity
+		56, 57		Freezing Drizzle: Light and Dense intensity
+		61, 63, 65	Rain: Slight, Moderate and Heavy intensity
+		66, 67		Freezing Rain: Light and Heavy intensity
+		71, 73, 75	Snow fall: Slight, Moderate, and Heavy intensity
+		77			Snow Grains
+		80, 81, 82	Rain showers: Slight, Moderate, and Violent
+		85, 86		Snow showers Slight and Heavy
+		95 *		Thunderstorm: Slight or Moderate
+		96, 99 *	Thunderstorm with Slight and Heavy Hail
 		 */
 		const WeatherCodes = {
 			0: 'Clear Sky', 1: 'Mainly Clear', 2: 'Partly Cloudy', 3: 'Overcast',
-			45: 'Fog', 48: 'Rime Fog',
+			45: 'Fog', 48: 'Depositing Rime Fog',
 			51: 'Light Drizzle', 53: 'Moderate Drizzle', 55: 'Dense Drizzle',
 			56: 'Light Freezing Drizzle', 57: 'Dense Freezing Drizzle',
 			61: 'Slight Rain', 63: 'Moderate Rain', 65: 'Heavy Rain',
 			66: 'Light Freezing Rain', 67: 'Heavy Freezing Rain',
 			71: 'Slight Snow', 73: 'Moderate Snow', 75: 'Heavy Snow',
 			77: 'Snow Grains',
-			80: 'Slight Rain Showers', 81: 'Moderate Rain Showers', 82: 'Heavy Rain Showers',
+			80: 'Slight Rain Showers', 81: 'Moderate Rain Showers', 82: 'Violent Rain Showers',
 			85: 'Slight Snow Showers', 86: 'Heavy Snow Showers',
 			95: 'Slight/Moderate Thunderstorm',
 			96: 'Slight Hail Thunderstorm', 99: 'Heavy Hail Thunderstorm'
@@ -271,13 +288,13 @@ export default class MagickJournalPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		this.ReloadEraLegis()
+		this.ReloadData()
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('wand', 'Greet', (_: MouseEvent) => {
 			// Called when the user clicks the icon.
-			this.ReloadEraLegis();
-			this.getFullHeading();
+			this.ReloadData();
+			this.GetFullHeading();
 			new Notice(this.ThelemicDate.trim());
 		});
 		// Perform additional things with the ribbon
@@ -288,8 +305,8 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "full-heading",
 			name: "Insert Full Thelemic Date Header",
 			editorCallback: (editor: Editor) => {
-				this.ReloadEraLegis();
-				const fullHeading = this.getFullHeading();
+				this.ReloadData();
+				const fullHeading = this.GetFullHeading();
 				editor.replaceRange(
 					fullHeading,
 					editor.getCursor()
@@ -305,7 +322,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-astro",
 			name: "Insert Astrological Info",
 			editorCallback: (editor: Editor) => {
-				this.ReloadEraLegis();
+				this.ReloadData();
 				editor.replaceRange(
 					this.AstroHeading + '\n',
 					editor.getCursor()
@@ -318,17 +335,13 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-extra-fields",
 			name: "Insert Extra Fields",
 			editorCallback: (editor: Editor) => {
-				const additionalFields = this.settings.additionalDefaultFields.split(',');
-				let output = '';
-				additionalFields.forEach(function(field) {
-					output = output + '**' + field + ':** \n';
-				});
+				const additionalFields = this.GetExtraFields();
 				editor.replaceRange(
-					output,
+					additionalFields,
 					editor.getCursor()
 				);
 				// Split additional fields by newline and count the number of lines
-				const lineCount = output.split('\n').length;
+				const lineCount = additionalFields.split('\n').length;
 				editor.setCursor(editor.getCursor().line + lineCount + 1);
 			}
 		},);
@@ -353,7 +366,7 @@ export default class MagickJournalPlugin extends Plugin {
 			name: "Insert Date EV",
 			editorCallback: (editor: Editor) => {
 				editor.replaceRange(
-					this.TodayDateString + '\n',
+					this.GetEVDate() + '\n',
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
@@ -366,7 +379,7 @@ export default class MagickJournalPlugin extends Plugin {
 			name: "Insert Date AN",
 			editorCallback: (editor: Editor) => {
 				editor.replaceRange(
-					this.Anno + '\n',
+					this.NewAeonYear + '\n',
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
@@ -378,9 +391,9 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-day",
 			name: "Insert Day",
 			editorCallback: (editor: Editor) => {
-				this.updateTodaysDate();
+				this.GetLatinDayOfWeek();
 				editor.replaceRange(
-					this.DayOfWeek + '\n',
+					this.GetLatinDayOfWeek() + '\n',
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
@@ -392,6 +405,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-weather",
 			name: "Insert Weather",
 			editorCallback: (editor: Editor) => {
+				this.ReloadData();
 				editor.replaceRange(
 					'**Current Weather:** ' + this.WeatherDescription + '\n',
 					editor.getCursor()
@@ -417,7 +431,7 @@ export default class MagickJournalPlugin extends Plugin {
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText(this.TodayDateString + this.DayOfWeek + this.Anno + this.AstroHeading + this.MoonPhase);
+		statusBarItemEl.setText(this.EVDate + this.LatinDayOfWeek + this.NewAeonYear + this.AstroHeading + this.MoonPhase);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new MagickJournalSettingsTab(this.app, this));
@@ -452,10 +466,16 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		containerEl.createEl("h1", { text: "Magick Journal Settings" });
+		const entry_settings = containerEl.createEl("div");//, { cls: "settings_section" });
+		entry_settings.createEl("div", { text: "Default Entry Settings", cls: "settings_section_title" });
+		entry_settings.createEl("small", { text: "Defaults for Auto-Populated Entries", cls: "settings_section_description" });
+
 		new Setting(containerEl)
 			.setName('Default Location')
 			.setDesc('Default location for header')
-			.addText(text => text
+			.setClass("setting")
+			.addTextArea(textarea => textarea
 				.setPlaceholder('Enter a location')
 				.setValue(this.plugin.settings.defaultLocation)
 				.onChange(async (value) => {
@@ -463,14 +483,24 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const field_settings = containerEl.createEl("div");
+		field_settings.createEl("div", { text: "Default Fields", cls: "settings_section_title" });
+		field_settings.createEl("small", { text: "Defaults for Fields Created", cls: "settings_section_description" });
+
 		new Setting(containerEl)
-			.setName('Additional Default Fields')
-			.setDesc('Additional Fields to Add to Header separated by comma')
-			.addText(text => text
-				.setPlaceholder('Enter additional fields separated by a comma')
-				.setValue(this.plugin.settings.additionalDefaultFields)
+			.setName('Header Fields')
+			.setDesc('Comma separated fields to populate full header with.' +
+				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, and Blank to insert a blank line.' +
+				' Unrecognized options will be inserted as additional fields.')
+			.setClass("setting")
+			.addTextArea(textarea => textarea
+				.setPlaceholder('Enter default header fields separated by a comma.')
+				.setValue(this.plugin.settings.headerFields)
 				.onChange(async (value) => {
-					this.plugin.settings.additionalDefaultFields = value;
+					this.plugin.settings.headerFields = value;
 					await this.plugin.saveSettings();
 				}));
 	}
