@@ -12,6 +12,9 @@ interface MagickJournalSettings {
 	weatherTempDecimalPlaces: string,
 	weatherTempUnits: string,
 	weatherPressureUnits: string,
+	weatherShowDescription: boolean,
+	weatherShowTemp: boolean,
+	weatherShowPressure: boolean,
 	timeZoneInTimeField: boolean,
 	symbolInDayField: boolean,
 	useLatinNamesForDays: boolean,
@@ -32,6 +35,9 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	weatherTempDecimalPlaces: '2',
 	weatherTempUnits: 'fahrenheit',
 	weatherPressureUnits: 'inches',
+	weatherShowDescription: true,
+	weatherShowTemp: true,
+	weatherShowPressure: true,
 	timeZoneInTimeField: true,
 	symbolInDayField: true,
 	useLatinNamesForDays: true,
@@ -452,7 +458,7 @@ export default class MagickJournalPlugin extends Plugin {
 		// @ts-ignore
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
-			const temperature = data['current_weather']['temperature'].toFixed(Number(this.settings.weatherTempDecimalPlaces));
+			let temperature = data['current_weather']['temperature'].toFixed(Number(this.settings.weatherTempDecimalPlaces));
 			let index = '';
 			const currentTime = data['current_weather']['time'];
 			// loop through hourly times to find the index of the current time
@@ -469,12 +475,20 @@ export default class MagickJournalPlugin extends Plugin {
 				pressure = data['hourly']['pressure_msl'][index].toFixed(2) + 'mbar';
 			}
 
-			const WeatherDescription = this.WeatherCodeToString(data['current_weather']['weathercode']);
+			const description = this.WeatherCodeToString(data['current_weather']['weathercode']);
 			if (this.settings.weatherTempUnits.toLowerCase() == 'celsius') {
-				this.WeatherDescription = WeatherDescription + ', ' + temperature + '°C, ' + pressure;
+				temperature = temperature + '°C';
 			} else {
-				this.WeatherDescription = WeatherDescription + ', ' + temperature + '°F, ' + pressure;
+				temperature = temperature + '°F';
 			}
+
+			const options = [
+				this.settings.weatherShowDescription ? description : null,
+				this.settings.weatherShowTemp ? temperature : null,
+				this.settings.weatherShowPressure ? pressure : null
+			];
+
+			this.WeatherDescription = options.filter(Boolean).join(', ')
 		});
 		return this.WeatherDescription;
 	}
@@ -739,7 +753,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Geolocation Coordinates')
-			.setDesc('Manually enter your geolocation latitude and longitude, comma separated, for more accurate weather data.')
+			.setDesc('Manually enter your geolocation latitude and longitude, comma separated, for more accurate weather data. ie 40.7128,-74.0060')
 			.setClass("setting")
 			.addText(textarea => textarea
 				.setValue(this.plugin.settings.weatherGeolocation)
@@ -852,6 +866,45 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		const weather_field_settings = containerEl.createEl("div");
 		weather_field_settings.createEl("div", { text: "Weather", cls: "settings_section_title" });
 		weather_field_settings.createEl("small", { text: "Weather Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Include Weather Description')
+			.setDesc('Include the weather description in the weather field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include the weather description in the weather field.')
+				.setValue(this.plugin.settings.weatherShowDescription)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherShowDescription = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Include Temperature')
+			.setDesc('Include the temperature in weather field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include the temperature description in weather field.')
+				.setValue(this.plugin.settings.weatherShowTemp)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherShowTemp = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Include Pressure')
+			.setDesc('Include air pressure in the weather field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include air pressure in the weather field.')
+				.setValue(this.plugin.settings.weatherShowPressure)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherShowPressure = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
 
 
 		new Setting(containerEl)

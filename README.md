@@ -81,6 +81,12 @@ Example Configuration:
 
 ### Weather
 
+**Include Weather Description**: Whether to include the weather description in the weather field.
+
+**Include Temperature**: Whether to include the temperature in the weather field.
+
+**Include Air Pressure**: Whether to include the air pressure in the weather field.
+
 **Temperature Precision**: Number of decimal places to display for temperature.
 
 **Temperature Units**: Units to display temperature in, Celsius or Fahrenheit.
@@ -97,7 +103,7 @@ Example Configuration:
 
 **Use Latin Day Names**: Whether to display the day of the week in Latin.
 
-## Date
+### Date
 
 **Use E.V. Date**: Whether to append E.V. to the common era date.
 
