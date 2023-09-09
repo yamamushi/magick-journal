@@ -1,10 +1,15 @@
 # Magick Journal Plugin for Obsidian
 
-This plugin adds a number of tools for practitioners of Magick to Obsidian to aid in journaling.
+This plugin adds a number of tools for practitioners of Magick (Specifically Thelema) to Obsidian to aid in journaling.
+
+* [Commands](#commands)
+* [Settings](#settings)
+* [About](#about)
+* [Todo](#todo)
 
 ## Commands
 
-It's recommended to add hotkeys for these commands if you plan on using them often.
+It's recommended to add hotkeys for these commands if you plan on using them often. 
 
 * **full-heading**: Inserts the full heading as configured in the options for the plugin
 
@@ -38,6 +43,16 @@ Example Output:
 * **insert-moon**: Inserts current phase of the moon and illumination percentage.
 
 ## Settings
+
+- [Geolocation](#geolocation)
+- [Default Entries](#default-entries)
+- [Header](#header)
+- [Magick Date](#magick-date)
+- [Astro](#astro)
+- [Weather](#weather)
+- [Time](#time)
+- [Day](#day)
+- [Date](#date)
 
 ### Geolocation
 
@@ -120,8 +135,6 @@ magick-journal pulls the current astrological correspondence and Thelemic date f
 
 Both services are provided free of charge, but if you find this plugin useful, please consider donating to them (especially EraLegis ❤️).
 
-## Todo
+You can contact me via Discord @ **yamamushi** or on the /r/occult Discord server @ https://discord.gg/r-occult
 
-- [ ] Add more fine-tuned settings for all fields (In Progress)
-- [x] Adjust date popup to be configurable.
-- [x] Complete disable IP lookup if geolocation is provided
+
