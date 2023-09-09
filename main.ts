@@ -39,7 +39,6 @@ export default class MagickJournalPlugin extends Plugin {
 	NewAeonYear = '';
 	EVDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
-	ThelemicDate = '';
 	ReloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
 		this.SolarData['moon_phase'] = this.MoonPhaseToName(SunCalc.getMoonIllumination(date)['phase']);
