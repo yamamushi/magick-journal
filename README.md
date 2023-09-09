@@ -28,6 +28,8 @@ Example Output:
 
 * **insert-astro**: Inserts the astrological header with the Sun and Moon positions.
 
+* **insert-checklist**: Inserts the configured [checklist](#checklist) into the document.
+
 * **insert-time**: Inserts the current time and timezone
 
 * **insert-extra-fields**: Inserts the extra fields as configured in the options for the plugin.
