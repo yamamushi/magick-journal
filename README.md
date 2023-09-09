@@ -88,6 +88,28 @@ Example Configuration:
 
   	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other Field 1, Other Field 2
 
+### Checklist
+
+To use the checklist, you can either use the `insert-checklist` command, or you can add "Checklist" to the [Header](#header) fields.
+
+* **Checklist Items**: Comma separated items to insert into the checklist. These will be inserted in the order they are configured as well as their casing. 
+
+Example Configuration:
+
+  	Morning Resh, Yoga, Meditation, Noon Resh, Sunset Resh, Prepare Dinner, Reading Time, Midnight Resh
+
+Example Output:
+
+    - [ ] Morning Resh
+    - [ ] Yoga
+    - [ ] Meditation
+    - [ ] Noon Resh
+    - [ ] Sunset Resh
+    - [ ] Prepare Dinner
+    - [ ] Reading Time
+    - [ ] Midnight Resh
+
+
 ### Magick Date
 
 * **Magick Date Fields**: Comma separated fields to populate the magick date with. Available options are the same as for the [header](#header) fields.

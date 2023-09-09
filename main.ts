@@ -23,6 +23,7 @@ interface MagickJournalSettings {
 	padDate: boolean,
 	dateSeparator: string,
 	reshStatusBar: boolean,
+	checkListItems: string,
 }
 
 const DEFAULT_SETTINGS: MagickJournalSettings = {
@@ -47,6 +48,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	padDate: true,
 	dateSeparator: '-',
 	reshStatusBar: false,
+	checkListItems: '',
 }
 
 export default class MagickJournalPlugin extends Plugin {
@@ -228,6 +230,20 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.parseFieldListIntoString(magickDateFields).replace(/\*/g, '');
 	}
 
+	parseCheckList(input: string): string {
+		let output = ''
+		// First we get the default fields from the settings
+		const defaultFields = this.settings.checkListItems.split(',');
+		// Then we loop through each field and add it to the output
+		defaultFields.forEach(function(field) {
+			field = field.trim();
+			output += '- [ ] ' + field.split(' ')
+				//.map(s => s.charAt(0).toUpperCase() + s.substring(1))
+				.join(' ') + '\n';
+		}, this);
+		return output
+	}
+
 	parseFieldListIntoString(input: string[]): string {
 		const mappings = {
 			astro: this.AstroHeading,
@@ -238,6 +254,7 @@ export default class MagickJournalPlugin extends Plugin {
 			moon: '**Moon:** ' + this.MoonPhase,
 			location: '**Location:** ' + this.settings.defaultLocation,
 			weather: '**Current Weather:** ' + this.WeatherDescription,
+			checklist: this.parseCheckList(this.settings.checkListItems),
 			blank: ''
 		};
 
@@ -272,7 +289,7 @@ export default class MagickJournalPlugin extends Plugin {
 		// Then we loop through each field and add it to the output
 		defaultFields.forEach(function(field) {
 			field = field.trim();
-			const predefinedFields = ["astro", "anno", "day", "ev", "time", "moon", "location", "weather", "blank"];
+			const predefinedFields = ["astro", "anno", "day", "ev", "time", "moon", "location", "weather", "checklist", "blank"];
 			if (!predefinedFields.includes(field)) {
 				output += '**' + field.split(' ')
 					.map(s => s.charAt(0).toUpperCase() + s.substring(1))
@@ -522,6 +539,21 @@ export default class MagickJournalPlugin extends Plugin {
 			}
 		},);
 
+		this.addCommand({
+			id: "insert-checklist",
+			name: "Insert Checklist",
+			editorCallback: (editor: Editor) => {
+				const checklistItems = this.parseCheckList(this.settings.checkListItems);
+				editor.replaceRange(
+					checklistItems,
+					editor.getCursor()
+				);
+				// Split additional fields by newline and count the number of lines
+				const lineCount = checklistItems.split('\n').length;
+				editor.setCursor(editor.getCursor().line + lineCount + 1);
+			}
+		},);
+
 		// Adds a command to insert the current time
 		this.addCommand({
 			id: "insert-time",
@@ -692,7 +724,6 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					this.plugin.reloadData();
 				}));
 
-
 		containerEl.createEl("br");
 		containerEl.createEl("br");
 
@@ -725,7 +756,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Header Fields')
 			.setDesc('Comma separated fields to populate full header with.' +
-				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, and Blank to insert a blank line.' +
+				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, Checklist, and Blank to insert a blank line.' +
 				' Unrecognized options will be inserted as additional fields.')
 			.setClass("setting")
 			.addTextArea(textarea => textarea
@@ -733,6 +764,27 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.headerFields)
 				.onChange(async (value) => {
 					this.plugin.settings.headerFields = value;
+					await this.plugin.saveSettings();
+				}));
+
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+
+		const checklist_settings = containerEl.createEl("div");//, { cls: "settings_section" });
+		checklist_settings.createEl("div", { text: "Checklist", cls: "settings_section_title" });
+		checklist_settings.createEl("small", { text: "Settings for the Checklist feature", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Checklist Items')
+			.setDesc('Comma separated items to populate a checklist with.')
+			.setClass("setting")
+			.addTextArea(textarea => textarea
+				.setPlaceholder('Enter default items separated by a comma.')
+				.setValue(this.plugin.settings.checkListItems)
+				.onChange(async (value) => {
+					this.plugin.settings.checkListItems = value;
 					await this.plugin.saveSettings();
 				}));
 
