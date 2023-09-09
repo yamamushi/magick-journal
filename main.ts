@@ -8,7 +8,7 @@ interface MagickJournalSettings {
 	astrologyIncludeEmoji: boolean,
 	astrologyIncludeEnglish: boolean,
 	weatherUseGeolocation: boolean,
-	weatherGeolocation: string,
+	customLatLonCoords: string,
 	weatherTempDecimalPlaces: string,
 	weatherTempUnits: string,
 	weatherPressureUnits: string,
@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	astrologyIncludeEmoji: true,
 	astrologyIncludeEnglish: true,
 	weatherUseGeolocation: true,
-	weatherGeolocation: '',
+	customLatLonCoords: '',
 	weatherTempDecimalPlaces: '2',
 	weatherTempUnits: 'fahrenheit',
 	weatherPressureUnits: 'inches',
@@ -92,11 +92,8 @@ export default class MagickJournalPlugin extends Plugin {
 		const params = {format: 'txt', tz: '', lang: 'english', location: '', emojis: false};
 
 		const tzOffset = new Date().getTimezoneOffset();
-		const tzSign = (tzOffset <= 0) ? '' : '-';
-		let isoOffset = String((Math.abs(tzOffset) / 60) * 100);
-		for (let i = 4 - isoOffset.toString().length; i > 0 ; i--) {
-			isoOffset = '0' + isoOffset;
-		}
+		const tzSign = tzOffset <= 0 ? '' : '-';
+		const isoOffset = String(Math.abs(tzOffset) / 60).padStart(4, '0');
 		params['tz'] = tzSign + isoOffset;
 
 		if(this.settings.weatherUseGeolocation) {
@@ -117,8 +114,8 @@ export default class MagickJournalPlugin extends Plugin {
 					console.error('Error fetching or parsing data:', error);
 				});
 		} else {
-			const geoFields = this.settings.weatherGeolocation.split(',');
-			params['location'] = geoFields[0] + ':' + geoFields[1];
+			const geoFields = this.settings.customLatLonCoords.split(',');
+			params['location'] = geoFields[0].trim() + ':' + geoFields[1].trim();
 			this.ReloadSunMoonData(new Date());
 			this.UpdateWeatherDescription();
 			this.fetchEraLegis(params).then(data => {
@@ -269,9 +266,10 @@ export default class MagickJournalPlugin extends Plugin {
 		// Then we loop through each field and add it to the output
 		defaultFields.forEach(function(field) {
 			field = field.trim();
-			if (field != "astro" && field != "anno" && field != "day" && field != "ev" && field != "time" && field != "moon" && field != "location" && field != "weather" && field != "blank") {
-				output = output + '**' + field.split(' ')
-					.map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+			const predefinedFields = ["astro", "anno", "day", "ev", "time", "moon", "location", "weather", "blank"];
+			if (!predefinedFields.includes(field)) {
+				output += '**' + field.split(' ')
+					.map(s => s.charAt(0).toUpperCase() + s.substring(1))
 					.join(' ') + ':** \n';
 			}
 		}, this);
@@ -298,9 +296,8 @@ export default class MagickJournalPlugin extends Plugin {
 
 		// @ts-ignore
 		this.TodaysDate = this.settings.dateFormat.split('-').map(part => components[part]).join(this.settings.dateSeparator);
-		if (this.settings.useEVInDateField) {
-			this.TodaysDate = this.TodaysDate + ' e.v.';
-		}
+		this.TodaysDate += this.settings.useEVInDateField ? ' e.v.' : '';
+
 
 		return this.TodaysDate
 	}
@@ -309,8 +306,8 @@ export default class MagickJournalPlugin extends Plugin {
 		const weatherParams = { latitude: '', longitude: '',
 			hourly: 'temperature_2m,pressure_msl,surface_pressure,weathercode', temperature_unit: '',
 			windspeed_unit: 'mph', precipitation_unit: '', timezone: '', forecast_days: 1, current_weather: 'true'};
-		weatherParams['latitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lat : this.settings.weatherGeolocation.split(',')[0];
-		weatherParams['longitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lon : this.settings.weatherGeolocation.split(',')[1];
+		weatherParams['latitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lat : this.settings.customLatLonCoords.split(',')[0].trim();
+		weatherParams['longitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lon : this.settings.customLatLonCoords.split(',')[1].trim();
 
 		weatherParams['temperature_unit'] = this.settings.weatherTempUnits.toLowerCase();
 		weatherParams['windspeed_unit'] = 'mph';
@@ -334,7 +331,6 @@ export default class MagickJournalPlugin extends Plugin {
 			const description = this.WeatherCodeToString(data['current_weather']['weathercode']);
 			const temperatureUnit = this.settings.weatherTempUnits.toLowerCase() === 'celsius' ? '°C' : '°F';
 			temperature += temperatureUnit;
-
 
 			const options = [
 				this.settings.weatherShowDescription ? description : null,
@@ -390,21 +386,12 @@ export default class MagickJournalPlugin extends Plugin {
 		let hours = date.getHours();
 		let minutes  = String(date.getMinutes());
 		const ampm = hours >= 12 ? 'PM' : 'AM';
-		hours = hours % 12;
-		hours = hours ? hours : 12; // the hour '0' should be 12
+		hours = (hours % 12) || 12;
 		minutes = Number(minutes) < 10 ? '0'+minutes : minutes;
 		// tz is the current timezone in word format
 		const tz = new Date()
-			.toLocaleDateString('en-US', {
-				day: '2-digit',
-				timeZoneName: 'short',
-			})
-			.slice(4)
-		if (this.settings.timeZoneInTimeField) {
-			return hours + ':' + minutes + ' ' + ampm + ' ' + tz;
-		} else {
-			return hours + ':' + minutes + ' ' + ampm;
-		}
+			.toLocaleDateString('en-US', { day: '2-digit', timeZoneName: 'short',}).slice(4)
+		return hours + ':' + minutes + ' ' + ampm + (this.settings.timeZoneInTimeField ? ' ' + tz : '');
 	}
 
 	async onload() {
@@ -424,16 +411,18 @@ export default class MagickJournalPlugin extends Plugin {
 		// Adds a command to insert thelemic date
 		this.addCommand({
 			id: "full-heading",
-			name: "Insert Full Journal Header",
+			name: "Insert Full Journal Heading",
 			editorCallback: (editor: Editor) => {
 				this.ReloadData();
 				const fullHeading = this.GetFullHeading();
 				editor.replaceRange(
-					fullHeading,
+					fullHeading + '  ',
 					editor.getCursor()
 				)
+				const lines = fullHeading.split('\n');
 				const lineCount = fullHeading.split('\n').length;
-				editor.setCursor(editor.getCursor().line + lineCount );
+				const lastLineLength = lines[lines.length - 1].length;
+				editor.setCursor(editor.getCursor().line + lineCount, lastLineLength);
 			},
 		});
 
@@ -609,9 +598,9 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 			.setDesc('Manually enter your geolocation latitude and longitude, comma separated, for more accurate weather data. ie 40.7128,-74.0060')
 			.setClass("setting")
 			.addText(textarea => textarea
-				.setValue(this.plugin.settings.weatherGeolocation)
+				.setValue(this.plugin.settings.customLatLonCoords)
 				.onChange(async (value) => {
-					this.plugin.settings.weatherGeolocation = value;
+					this.plugin.settings.customLatLonCoords = value;
 					this.plugin.UpdateWeatherDescription();
 					await this.plugin.saveSettings();
 				}).then(() => {this.plugin.ReloadData()}));
