@@ -7,7 +7,7 @@ interface MagickJournalSettings {
 	magickDateFields: string,
 	astrologyIncludeEmoji: boolean,
 	astrologyIncludeEnglish: boolean,
-	weatherUseGeolocation: boolean,
+	useGeolocation: boolean,
 	customLatLonCoords: string,
 	weatherTempDecimalPlaces: string,
 	weatherTempUnits: string,
@@ -22,6 +22,7 @@ interface MagickJournalSettings {
 	dateFormat: string,
 	padDate: boolean,
 	dateSeparator: string,
+	reshStatusBar: boolean,
 }
 
 const DEFAULT_SETTINGS: MagickJournalSettings = {
@@ -30,7 +31,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	magickDateFields: 'Astro, Anno, Day, EV, Time',
 	astrologyIncludeEmoji: true,
 	astrologyIncludeEnglish: true,
-	weatherUseGeolocation: true,
+	useGeolocation: true,
 	customLatLonCoords: '',
 	weatherTempDecimalPlaces: '2',
 	weatherTempUnits: 'fahrenheit',
@@ -45,6 +46,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	dateFormat: 'MM-DD-YYYY',
 	padDate: true,
 	dateSeparator: '-',
+	reshStatusBar: true,
 }
 
 export default class MagickJournalPlugin extends Plugin {
@@ -59,6 +61,7 @@ export default class MagickJournalPlugin extends Plugin {
 	NewAeonYear = '';
 	TodaysDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
+	statusBarItemEl = this.addStatusBarItem();
 
 	reloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
@@ -97,7 +100,7 @@ export default class MagickJournalPlugin extends Plugin {
 		const isoOffset = String(Math.abs(tzOffset) / 60).padStart(4, '0');
 		params['tz'] = tzSign + isoOffset;
 
-		if(this.settings.weatherUseGeolocation) {
+		if(this.settings.useGeolocation) {
 			fetch('http://ip-api.com/json/')
 				.then(response => response.json())
 				.then(data => {
@@ -307,8 +310,8 @@ export default class MagickJournalPlugin extends Plugin {
 		const weatherParams = { latitude: '', longitude: '',
 			hourly: 'temperature_2m,pressure_msl,surface_pressure,weathercode', temperature_unit: '',
 			windspeed_unit: 'mph', precipitation_unit: '', timezone: '', forecast_days: 1, current_weather: 'true'};
-		weatherParams['latitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lat : this.settings.customLatLonCoords.split(',')[0].trim();
-		weatherParams['longitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lon : this.settings.customLatLonCoords.split(',')[1].trim();
+		weatherParams['latitude'] = this.settings.useGeolocation ? this.GeoLocation.lat : this.settings.customLatLonCoords.split(',')[0].trim();
+		weatherParams['longitude'] = this.settings.useGeolocation ? this.GeoLocation.lon : this.settings.customLatLonCoords.split(',')[1].trim();
 
 		weatherParams['temperature_unit'] = this.settings.weatherTempUnits.toLowerCase();
 		weatherParams['windspeed_unit'] = 'mph';
@@ -393,6 +396,70 @@ export default class MagickJournalPlugin extends Plugin {
 		const tz = new Date()
 			.toLocaleDateString('en-US', { day: '2-digit', timeZoneName: 'short',}).slice(4)
 		return hours + ':' + minutes + ' ' + ampm + (this.settings.timeZoneInTimeField ? ' ' + tz : '');
+	}
+
+	countdownToString(reshTime: number) : string  {
+		const now = new Date();
+		const nowTime = now.getTime();
+		const timeUntil = reshTime - nowTime;
+
+		const hours = Math.floor( timeUntil / (1000 * 60 * 60));
+		const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+		const seconds = Math.floor((timeUntil % (1000 * 60)) / 1000);
+
+		return hours + "h " + minutes + "m " + seconds + "s ";
+	}
+
+	liberReshHandler() {
+		if (!this.settings.reshStatusBar) {
+			this.statusBarItemEl.setText('');
+			return;
+		}
+		let todayTimes: SunCalc.GetTimesResult;
+		let tomorrowTimes: SunCalc.GetTimesResult;
+
+		if (this.settings.useGeolocation) {
+			todayTimes = SunCalc.getTimes(new Date(), Number(this.GeoLocation.lat), Number(this.GeoLocation.lon));
+			// and tomorrow
+			tomorrowTimes = SunCalc.getTimes(new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+				Number(this.GeoLocation.lat), Number(this.GeoLocation.lon));
+		} else {
+			const geoFields = this.settings.customLatLonCoords.split(',');
+			todayTimes = SunCalc.getTimes(new Date(), Number(geoFields[0].trim()), Number(geoFields[1].trim()));
+			// and tomorrow
+			tomorrowTimes = SunCalc.getTimes(new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
+				Number(geoFields[0].trim()), Number(geoFields[1].trim()));
+		}
+		const sunrise = todayTimes.sunrise;
+		const noon = todayTimes.solarNoon;
+		const sunset = todayTimes.sunset;
+		const midnight = todayTimes.nadir;
+		const tomorrowMidnight = tomorrowTimes.nadir;
+
+		const now = new Date();
+		const nowTime = now.getTime();
+
+		if (nowTime < sunrise.getTime()) {
+			const reshTime = sunrise.getTime();
+			const timeString = this.countdownToString(reshTime)
+			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + ', Previous (Midnight): ' + this.formatAMPM(midnight));
+		} else if (nowTime < noon.getTime()) {
+			const reshTime = noon.getTime();
+			const timeString = this.countdownToString(reshTime)
+			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + ', Previous (Sunrise): ' + this.formatAMPM(sunrise));
+		} else if (nowTime < sunset.getTime()) {
+			const reshTime = sunset.getTime();
+			const timeString = this.countdownToString(reshTime)
+			this.statusBarItemEl.setText('Sunset Resh in ' + timeString + ', Previous (Noon): ' + this.formatAMPM(noon));
+		} else if (nowTime < tomorrowMidnight.getTime()) {
+			const reshTime = tomorrowMidnight.getTime();
+			const timeString = this.countdownToString(reshTime)
+			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + ', Previous (Sunset): ' + this.formatAMPM(sunset));
+		} else {
+			console.log('Not Found');
+		}
+
+		//new Notice(this.getMagickDate());
 	}
 
 	async onload() {
@@ -537,20 +604,20 @@ export default class MagickJournalPlugin extends Plugin {
 			},
 		});
 
-
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText(this.TodaysDate + this.LatinDayOfWeek + this.NewAeonYear + this.AstroHeading + this.MoonPhase);
+		//const statusBarItemEl = this.addStatusBarItem();
+		//statusBarItemEl.setText(this.TodaysDate + this.LatinDayOfWeek + this.NewAeonYear + this.AstroHeading + this.MoonPhase);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new MagickJournalSettingsTab(this.app, this));
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		//this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		const second = 1000;
+		this.registerInterval(window.setInterval(() => this.liberReshHandler(), 1*second));
 	}
 
 	onunload() {
-
+		this.statusBarItemEl.setText('');
 	}
 
 	async loadSettings() {
@@ -586,9 +653,9 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 			.setClass("setting")
 			.addToggle(textarea => textarea
 				.setTooltip('Use manual weather geolocation instead of IP based geolocation.')
-				.setValue(this.plugin.settings.weatherUseGeolocation)
+				.setValue(this.plugin.settings.useGeolocation)
 				.onChange(async (value) => {
-					this.plugin.settings.weatherUseGeolocation = value;
+					this.plugin.settings.useGeolocation = value;
 					await this.plugin.saveSettings();
 					this.plugin.reloadData();
 				}));
@@ -604,6 +671,27 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					this.plugin.updateWeatherDescription();
 					await this.plugin.saveSettings();
 				}).then(() => {this.plugin.reloadData()}));
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+
+		const resh_settings = containerEl.createEl("div");//, { cls: "settings_section" });
+		resh_settings.createEl("div", { text: "Liber Resh", cls: "settings_section_title" });
+		resh_settings.createEl("small", { text: "Settings for the Liber Resh Clock statusbar", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Enable Liber Resh Statusbar')
+			.setDesc('Enables the Liber Resh Clock statusbar.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Enable the Liber Resh Clock statusbar.')
+				.setValue(this.plugin.settings.reshStatusBar)
+				.onChange(async (value) => {
+					this.plugin.settings.reshStatusBar = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
 
 
 		containerEl.createEl("br");

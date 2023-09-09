@@ -60,6 +60,10 @@ Example Output:
 
 **Geolocation Coordinates**: The coordinates to use for weather lookups if IP geolocation is disabled. This should be in the format `latitude,longitude` (e.g. `38.8339,-104.8214`).
 
+### Liber Resh Clock
+
+**Enable Liber Resh Clock**: Whether to enable the Liber Resh Clock statusbar. This will tell you when the next Resh is, and when the previous Resh was.
+
 ### Default Entries
 
 **Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
