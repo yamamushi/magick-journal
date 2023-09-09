@@ -39,6 +39,12 @@ Example Output:
 
 ## Settings
 
+### Geolocation
+
+**IP Geolocation**: Whether to use IP geolocation to determine location for weather and Astrological lookups. If disabled, the configured coordinates will be used.
+
+**Geolocation Coordinates**: The coordinates to use for weather lookups if IP geolocation is disabled. This should be in the format `latitude,longitude` (e.g. `38.8339,-104.8214`).
+
 ### Default Entries
 
 **Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
@@ -57,9 +63,9 @@ Example Output:
 * **Weather**: To insert the current local weather
 * **Blank**: To insert a blank line.
 
-### Magic Date
+### Magick Date
 
-**Magic Date Fields**: Comma separated fields to populate the magic date with. Available options are the same as for the header fields.
+**Magick Date Fields**: Comma separated fields to populate the magick date with. Available options are the same as for the header fields.
 
 **Unrecognized options will be inserted as additional fields.**
 
@@ -75,15 +81,31 @@ Example Configuration:
 
 ### Weather
 
-**IP Weather Geolocation**: Whether to use IP geolocation to determine weather location. If disabled, the configured coordinates will be used.
-
-**Geolocation Coordinates**: The coordinates to use for weather lookups if IP geolocation is disabled. This should be in the format `latitude,longitude` (e.g. `38.8339,-104.8214`).
-
-**Temperature Decimal Places**: Number of decimal places to display for temperature.
+**Temperature Precision**: Number of decimal places to display for temperature.
 
 **Temperature Units**: Units to display temperature in, Celsius or Fahrenheit.
 
 **Air Pressure Units**: Units to display air pressure in, Inches or Millibars.
+
+### Time
+
+**Timezone in Time Field**: Whether to display the timezone in the time field.
+
+### Day
+
+**Planet Symbols in Day Field**: Whether to display the planet symbols in the day field.
+
+**Use Latin Day Names**: Whether to display the day of the week in Latin.
+
+## Date
+
+**Use E.V. Date**: Whether to append E.V. to the common era date.
+
+**Date Format**: The format to use for the common era date, such as `MM-DD-YYYY` or `DD-MM-YYYY`.
+
+**Date Separator**: The separator to use between date fields, such as `-` or `/`.
+
+**Pad Date with Zeros**: Whether to pad the date with zeros, such as `01-01-2021` instead of `1-1-2021`.
 
 
 ## About
@@ -94,5 +116,6 @@ Both services are provided free of charge, but if you find this plugin useful, p
 
 ## Todo
 
-- [ ] Add more fine-tuned settings for all fields.
-- [ ] Adjust date popup to be configurable.
+- [ ] Add more fine-tuned settings for all fields (In Progress)
+- [x] Adjust date popup to be configurable.
+- [x] Complete disable IP lookup if geolocation is provided

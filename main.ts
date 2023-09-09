@@ -12,6 +12,13 @@ interface MagickJournalSettings {
 	weatherTempDecimalPlaces: string,
 	weatherTempUnits: string,
 	weatherPressureUnits: string,
+	timeZoneInTimeField: boolean,
+	symbolInDayField: boolean,
+	useLatinNamesForDays: boolean,
+	useEVInDateField: boolean,
+	dateFormat: string,
+	padDate: boolean,
+	dateSeparator: string,
 }
 
 const DEFAULT_SETTINGS: MagickJournalSettings = {
@@ -25,6 +32,13 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	weatherTempDecimalPlaces: '2',
 	weatherTempUnits: 'fahrenheit',
 	weatherPressureUnits: 'inches',
+	timeZoneInTimeField: true,
+	symbolInDayField: true,
+	useLatinNamesForDays: true,
+	useEVInDateField: true,
+	dateFormat: 'DD-MM-YYYY',
+	padDate: true,
+	dateSeparator: '-',
 }
 
 export default class MagickJournalPlugin extends Plugin {
@@ -37,7 +51,7 @@ export default class MagickJournalPlugin extends Plugin {
 	LatinDayOfWeek = '';
 	WeatherDescription = '';
 	NewAeonYear = '';
-	EVDate = '';
+	TodaysDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
 	ReloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
@@ -88,23 +102,32 @@ export default class MagickJournalPlugin extends Plugin {
 		}
 		params['tz'] = tzSign + isoOffset;
 
-		const today = new Date();
-		fetch('http://ip-api.com/json/')
-			.then(response => response.json())
-			.then(data => {
-				if (data != null) {
-					this.GeoLocation = data;
-					params['location'] = this.GeoLocation.lat + ':' + this.GeoLocation.lon;
-					this.ReloadSunMoonData(today);
-					this.UpdateWeatherDescription();
-					this.fetchEraLegis(params).then(data => {
-						this.UpdateEraLegisVars(data);
-					});
-				}
-			})
-			.catch(error => {
-				console.error('Error fetching or parsing data:', error);
+		if(this.settings.weatherUseGeolocation) {
+			fetch('http://ip-api.com/json/')
+				.then(response => response.json())
+				.then(data => {
+					if (data != null) {
+						this.GeoLocation = data;
+						params['location'] = this.GeoLocation.lat + ':' + this.GeoLocation.lon;
+						this.ReloadSunMoonData(new Date());
+						this.UpdateWeatherDescription();
+						this.fetchEraLegis(params).then(data => {
+							this.UpdateEraLegisVars(data);
+						});
+					}
+				})
+				.catch(error => {
+					console.error('Error fetching or parsing data:', error);
+				});
+		} else {
+			const geoFields = this.settings.weatherGeolocation.split(',');
+			params['location'] = geoFields[0] + ':' + geoFields[1];
+			this.ReloadSunMoonData(new Date());
+			this.UpdateWeatherDescription();
+			this.fetchEraLegis(params).then(data => {
+				this.UpdateEraLegisVars(data);
 			});
+		}
 	}
 	async fetchEraLegis(params : {format: string, tz: string, lang: string, location: string}): Promise<string> {
 		const base_url = 'https://date.eralegis.info/';
@@ -122,13 +145,56 @@ export default class MagickJournalPlugin extends Plugin {
 
 	GetLatinDayOfWeek() {
 		this.LatinDayOfWeek = new Date().toLocaleDateString('en-US', {weekday: 'long'});
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Sunday', 'dies Solis ☉');
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Monday', 'dies Lunae ☽');
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Tuesday', 'dies Martis ♂');
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Wednesday', 'dies Mercurii ☿');
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Thursday', 'dies Iovis ♃');
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Friday', 'dies Veneris ♀');
-		this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Saturday', 'dies Saturni ♄');
+		if (this.LatinDayOfWeek == 'Sunday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Sunday', 'dies Solis');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ☉';
+			}
+		} else if (this.LatinDayOfWeek == 'Monday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Monday', 'dies Lunae');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ☽';
+			}
+		} else if (this.LatinDayOfWeek == 'Tuesday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Tuesday', 'dies Martis');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♂';
+			}
+		} else if (this.LatinDayOfWeek == 'Wednesday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Wednesday', 'dies Mercurii');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ☿';
+			}
+		} else if (this.LatinDayOfWeek == 'Thursday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Thursday', 'dies Iovis');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♃';
+			}
+		} else if (this.LatinDayOfWeek == 'Friday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Friday', 'dies Veneris');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♀';
+			}
+		} else if (this.LatinDayOfWeek == 'Saturday') {
+			if (this.settings.useLatinNamesForDays) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Saturday', 'dies Saturni');
+			}
+			if (this.settings.symbolInDayField) {
+				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♄';
+			}
+		}
 		return this.LatinDayOfWeek;
 	}
 
@@ -337,9 +403,30 @@ export default class MagickJournalPlugin extends Plugin {
 	}
 
 	GetEVDate() {
-		this.EVDate = new Date().getDate() + '-' + (new Date().getMonth() + 1) + '-' + new Date().getFullYear();
-		this.EVDate = this.EVDate + ' e.v.';
-		return this.EVDate
+		const today = new Date();
+		let components = {}
+
+		if (this.settings.padDate) {
+			components = {
+				DD: String(today.getDate()).padStart(2, '0'),
+				MM: String(today.getMonth() + 1).padStart(2, '0'),  // Months are 0-based
+				YYYY: String(today.getFullYear())
+			};
+		} else {
+			components = {
+				DD: String(today.getDate()),
+				MM: String(today.getMonth() + 1),  // Months are 0-based
+				YYYY: String(today.getFullYear())
+			};
+		}
+
+		// @ts-ignore
+		this.TodaysDate = this.settings.dateFormat.split('-').map(part => components[part]).join(this.settings.dateSeparator);
+		if (this.settings.useEVInDateField) {
+			this.TodaysDate = this.TodaysDate + ' e.v.';
+		}
+
+		return this.TodaysDate
 	}
 
 	UpdateWeatherDescription(): string {
@@ -445,7 +532,11 @@ export default class MagickJournalPlugin extends Plugin {
 				timeZoneName: 'short',
 			})
 			.slice(4)
-		return hours + ':' + minutes + ' ' + ampm + ' ' + tz;
+		if (this.settings.timeZoneInTimeField) {
+			return hours + ':' + minutes + ' ' + ampm + ' ' + tz;
+		} else {
+			return hours + ':' + minutes + ' ' + ampm;
+		}
 	}
 
 	async onload() {
@@ -465,7 +556,7 @@ export default class MagickJournalPlugin extends Plugin {
 		// Adds a command to insert thelemic date
 		this.addCommand({
 			id: "full-heading",
-			name: "Insert Full Thelemic Date Header",
+			name: "Insert Full Journal Header",
 			editorCallback: (editor: Editor) => {
 				this.ReloadData();
 				const fullHeading = this.GetFullHeading();
@@ -553,7 +644,6 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-day",
 			name: "Insert Day",
 			editorCallback: (editor: Editor) => {
-				this.GetLatinDayOfWeek();
 				editor.replaceRange(
 					this.GetLatinDayOfWeek() + '\n',
 					editor.getCursor()
@@ -593,7 +683,7 @@ export default class MagickJournalPlugin extends Plugin {
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText(this.EVDate + this.LatinDayOfWeek + this.NewAeonYear + this.AstroHeading + this.MoonPhase);
+		statusBarItemEl.setText(this.TodaysDate + this.LatinDayOfWeek + this.NewAeonYear + this.AstroHeading + this.MoonPhase);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new MagickJournalSettingsTab(this.app, this));
@@ -629,13 +719,46 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl("h1", { text: "Magick Journal Settings" });
+
+		const geolocation_settings = containerEl.createEl("div");
+		geolocation_settings.createEl("div", { text: "Geolocation", cls: "settings_section_title" });
+		geolocation_settings.createEl("small", { text: "Geolocation Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('IP Geolocation')
+			.setDesc('Use IP based geolocation, disable to use manually entered coordinates.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Use manual weather geolocation instead of IP based geolocation.')
+				.setValue(this.plugin.settings.weatherUseGeolocation)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherUseGeolocation = value;
+					await this.plugin.saveSettings();
+					this.plugin.ReloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Geolocation Coordinates')
+			.setDesc('Manually enter your geolocation latitude and longitude, comma separated, for more accurate weather data.')
+			.setClass("setting")
+			.addText(textarea => textarea
+				.setValue(this.plugin.settings.weatherGeolocation)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherGeolocation = value;
+					this.plugin.UpdateWeatherDescription();
+					await this.plugin.saveSettings();
+				}).then(() => {this.plugin.ReloadData()}));
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
 		const entry_settings = containerEl.createEl("div");//, { cls: "settings_section" });
-		entry_settings.createEl("div", { text: "Default Entry Settings", cls: "settings_section_title" });
+		entry_settings.createEl("div", { text: "Default Entries", cls: "settings_section_title" });
 		entry_settings.createEl("small", { text: "Defaults for Auto-Populated Entries", cls: "settings_section_description" });
 
 		new Setting(containerEl)
 			.setName('Default Location')
-			.setDesc('Default location for header')
+			.setDesc('Default location for use in the journal header.')
 			.setClass("setting")
 			.addText(text => text
 				.setPlaceholder('Enter a location')
@@ -649,8 +772,8 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.createEl("br");
 
 		const header_field_settings = containerEl.createEl("div");
-		header_field_settings.createEl("div", { text: "Default Fields", cls: "settings_section_title" });
-		header_field_settings.createEl("small", { text: "Defaults for Fields Created", cls: "settings_section_description" });
+		header_field_settings.createEl("div", { text: "Header", cls: "settings_section_title" });
+		header_field_settings.createEl("small", { text: "Header settings", cls: "settings_section_description" });
 
 		new Setting(containerEl)
 			.setName('Header Fields')
@@ -689,12 +812,13 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				}));
 
 
+
 		containerEl.createEl("br");
 		containerEl.createEl("br");
 
 		const astro_field_settings = containerEl.createEl("div");
-		astro_field_settings.createEl("div", { text: "Astrology Field", cls: "settings_section_title" });
-		astro_field_settings.createEl("small", { text: "Astrology Field Settings", cls: "settings_section_description" });
+		astro_field_settings.createEl("div", { text: "Astrology", cls: "settings_section_title" });
+		astro_field_settings.createEl("small", { text: "Astrology Settings", cls: "settings_section_description" });
 
 		new Setting(containerEl)
 			.setName('Emojis in Astrology Field')
@@ -726,36 +850,12 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.createEl("br");
 
 		const weather_field_settings = containerEl.createEl("div");
-		weather_field_settings.createEl("div", { text: "Weather Field", cls: "settings_section_title" });
-		weather_field_settings.createEl("small", { text: "Weather Field Settings", cls: "settings_section_description" });
+		weather_field_settings.createEl("div", { text: "Weather", cls: "settings_section_title" });
+		weather_field_settings.createEl("small", { text: "Weather Settings", cls: "settings_section_description" });
+
 
 		new Setting(containerEl)
-			.setName('IP Weather Geolocation')
-			.setDesc('Use IP based geolocation, disable to use manually entered coordinates.')
-			.setClass("setting")
-			.addToggle(textarea => textarea
-				.setTooltip('Use manual weather geolocation instead of IP based geolocation.')
-				.setValue(this.plugin.settings.weatherUseGeolocation)
-				.onChange(async (value) => {
-					this.plugin.settings.weatherUseGeolocation = value;
-					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
-				}));
-
-		new Setting(containerEl)
-			.setName('Geolocation Coordinates')
-			.setDesc('Manually enter your geolocation latitude and longitude, comma separated, for more accurate weather data.')
-			.setClass("setting")
-			.addText(textarea => textarea
-				.setValue(this.plugin.settings.weatherGeolocation)
-				.onChange(async (value) => {
-					this.plugin.settings.weatherGeolocation = value;
-					this.plugin.UpdateWeatherDescription();
-					await this.plugin.saveSettings();
-				}).then(() => {this.plugin.ReloadData()}));
-
-		new Setting(containerEl)
-			.setName('Temperature Decimal Places')
+			.setName('Temperature Precision')
 			.setDesc('Number of decimal places to include in weather field temperature output.')
 			.setClass("setting")
 			.addText(textarea => textarea
@@ -793,6 +893,113 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			});
+
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const time_field_settings = containerEl.createEl("div");
+		time_field_settings.createEl("div", { text: "Time", cls: "settings_section_title" });
+		time_field_settings.createEl("small", { text: "Time Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Timezone in Time Field')
+			.setDesc('Include time timezone in the time field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include emojis in the astrology field.')
+				.setValue(this.plugin.settings.timeZoneInTimeField)
+				.onChange(async (value) => {
+					this.plugin.settings.timeZoneInTimeField = value;
+					await this.plugin.saveSettings();
+				}));
+
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const day_field_settings = containerEl.createEl("div");
+		day_field_settings.createEl("div", { text: "Day", cls: "settings_section_title" });
+		day_field_settings.createEl("small", { text: "Day Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Planet Symbols in Day Field')
+			.setDesc('Include the planetary symbols in the day field.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include the planetary symbols in the day field.')
+				.setValue(this.plugin.settings.symbolInDayField)
+				.onChange(async (value) => {
+					this.plugin.settings.symbolInDayField = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Use Latin Day Names')
+			.setDesc('Use latin day names instead of english.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Use latin day names instead of english.')
+				.setValue(this.plugin.settings.useLatinNamesForDays)
+				.onChange(async (value) => {
+					this.plugin.settings.useLatinNamesForDays = value;
+					await this.plugin.saveSettings();
+				}));
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const date_field_settings = containerEl.createEl("div");
+		date_field_settings.createEl("div", { text: "Date", cls: "settings_section_title" });
+		date_field_settings.createEl("small", { text: "Date Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Use E.V. Date')
+			.setDesc('Use era vulgaris (common era) in date')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Use era vulgaris (common era) in date')
+				.setValue(this.plugin.settings.useEVInDateField)
+				.onChange(async (value) => {
+					this.plugin.settings.useEVInDateField = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Date Format')
+			.setDesc('Format for the date in MM-DD-YYYY, ie DD-MM-YYYY, YYYY-DD-MM. etc.')
+			.setClass("setting")
+			.addText(text => text
+				.setPlaceholder('Format for the date in MM-DD-YYYY')
+				.setValue(this.plugin.settings.dateFormat)
+				.onChange(async (value) => {
+					this.plugin.settings.dateFormat = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Date Separator')
+			.setDesc('Date separator, ie / or -, etc.')
+			.setClass("setting")
+			.addText(text => text
+				.setPlaceholder('Date separator, ie / or -')
+				.setValue(this.plugin.settings.dateSeparator)
+				.onChange(async (value) => {
+					this.plugin.settings.dateSeparator = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Pad Date with Zeros')
+			.setDesc('Pad the date with zeros, ie 01-01-2021 instead of 1-1-2021.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Pad the date with zeros, ie 01-01-2021 instead of 1-1-2021.')
+				.setValue(this.plugin.settings.padDate)
+				.onChange(async (value) => {
+					this.plugin.settings.padDate = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 }
 
