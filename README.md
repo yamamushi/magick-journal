@@ -1,4 +1,4 @@
-# Magick Journal Plugin for Obsidian
+# Magick Journal for Obsidian
 
 This plugin adds a number of tools for practitioners of Magick (Specifically Thelema) to Obsidian to aid in journaling.
 
@@ -135,10 +135,13 @@ Example Configuration:
 
 ## About
 
-magick-journal pulls the current astrological correspondence and Thelemic date from https://eralegis.info/ and the current weather from https://open-meteo.com/.
+magick-journal pulls the current astrological correspondence and Thelemic date from https://eralegis.info/, the current weather from https://open-meteo.com/, and GeoLocation data from http://ip-api.com/.
 
-Both services are provided free of charge, but if you find this plugin useful, please consider donating to them (especially EraLegis ❤️).
+All the services are provided free of charge, but if you find this plugin useful, please consider donating to them (especially EraLegis ❤️).
+
+If you're wondering why it's spelled "Magick" instead of "Magic": https://simple.wikipedia.org/wiki/Magick
+
+## Contact
 
 You can contact me via Discord @ **yamamushi** or on the /r/occult Discord server @ https://discord.gg/r-occult
-
-
+93/93
