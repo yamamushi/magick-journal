@@ -66,67 +66,71 @@ Example Output:
 
 ### Header 
 
-**Header Fields**: Comma separated fields to populate full header with. Options are:
+* **Header Fields**: Comma separated fields to populate full header with. Options are:
 
-* **Astro**: To insert the current astrological header from EraLegis
-* **Anno**: To insert the current New Aeon date
-* **Day**: To insert the current latin day of the week
-* **EV**: To insert the current common era date 
-* **Time**: To insert the current local time and timezone
-* **Moon**: To insert the current phase of the moon and illumination percentage
-* **Location**: To insert the configured Default Location
-* **Weather**: To insert the current local weather
-* **Blank**: To insert a blank line.
-
-### Magick Date
-
-**Magick Date Fields**: Comma separated fields to populate the magick date with. Available options are the same as for the header fields.
-
-**Unrecognized options will be inserted as additional fields.**
+  * **Astro**: To insert the current astrological header from EraLegis
+  * **Anno**: To insert the current New Aeon date
+  * **Day**: To insert the current latin day of the week
+  * **EV**: To insert the current common era date 
+  * **Time**: To insert the current local time and timezone
+  * **Moon**: To insert the current phase of the moon and illumination percentage
+  * **Location**: To insert the configured Default Location
+  * **Weather**: To insert the current local weather
+  * **Blank**: To insert a blank line.
 
 Example Configuration:
 
-	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other
+  	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other Field 1, Other Field 2
+
+### Magick Date
+
+* **Magick Date Fields**: Comma separated fields to populate the magick date with. Available options are the same as for the [header](#header) fields.
+
+	**Unrecognized options will be inserted as additional fields.**
+
+Example Configuration:
+
+	Astro, Anno, Day, EV, Time
 
 ### Astro
 
-**Emojis in Astro Field**: Whether to use emojis in the astrological header.
+* **Emojis in Astro Field**: Whether to use emojis in the astrological header.
 
-**English Names in Astro Field**: Whether to use English sign names in the astrological header.
+* **English Names in Astro Field**: Whether to use English sign names in the astrological header.
 
 ### Weather
 
-**Include Weather Description**: Whether to include the weather description in the weather field.
+* **Include Weather Description**: Whether to include the weather description in the weather field.
 
-**Include Temperature**: Whether to include the temperature in the weather field.
+* **Include Temperature**: Whether to include the temperature in the weather field.
 
-**Include Air Pressure**: Whether to include the air pressure in the weather field.
+* **Include Air Pressure**: Whether to include the air pressure in the weather field.
 
-**Temperature Precision**: Number of decimal places to display for temperature.
+* **Temperature Precision**: Number of decimal places to display for temperature.
 
-**Temperature Units**: Units to display temperature in, Celsius or Fahrenheit.
+* **Temperature Units**: Units to display temperature in, Celsius or Fahrenheit.
 
-**Air Pressure Units**: Units to display air pressure in, Inches or Millibars.
+* **Air Pressure Units**: Units to display air pressure in, Inches or Millibars.
 
 ### Time
 
-**Timezone in Time Field**: Whether to display the timezone in the time field.
+* **Timezone in Time Field**: Whether to display the timezone in the time field.
 
 ### Day
 
-**Planet Symbols in Day Field**: Whether to display the planet symbols in the day field.
+* **Planet Symbols in Day Field**: Whether to display the planet symbols in the day field.
 
-**Use Latin Day Names**: Whether to display the day of the week in Latin.
+* **Use Latin Day Names**: Whether to display the day of the week in Latin.
 
 ### Date
 
-**Use E.V. Date**: Whether to append E.V. to the common era date.
+* **Use E.V. Date**: Whether to append E.V. to the common era date.
 
-**Date Format**: The format to use for the common era date, such as `MM-DD-YYYY` or `DD-MM-YYYY`.
+* **Date Format**: The format to use for the common era date, such as `MM-DD-YYYY` or `DD-MM-YYYY`.
 
-**Date Separator**: The separator to use between date fields, such as `-` or `/`.
+* **Date Separator**: The separator to use between date fields, such as `-` or `/`.
 
-**Pad Date with Zeros**: Whether to pad the date with zeros, such as `01-01-2021` instead of `1-1-2021`.
+* **Pad Date with Zeros**: Whether to pad the date with zeros, such as `01-01-2021` instead of `1-1-2021`.
 
 
 ## About
