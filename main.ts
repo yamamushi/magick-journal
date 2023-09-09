@@ -62,6 +62,7 @@ export default class MagickJournalPlugin extends Plugin {
 	TodaysDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
 	statusBarItemEl = this.addStatusBarItem();
+	lastReshNotfied = '';
 
 	reloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
@@ -442,23 +443,21 @@ export default class MagickJournalPlugin extends Plugin {
 		if (nowTime < sunrise.getTime()) {
 			const reshTime = sunrise.getTime();
 			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + ', Previous (Midnight): ' + this.formatAMPM(midnight));
+			this.statusBarItemEl.setText('Sunrise Resh in ' + timeString + '('+ this.formatAMPM(sunrise) +'), Previous (Midnight): ' + this.formatAMPM(midnight));
 		} else if (nowTime < noon.getTime()) {
 			const reshTime = noon.getTime();
 			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + ', Previous (Sunrise): ' + this.formatAMPM(sunrise));
+			this.statusBarItemEl.setText('Noon Resh in ' + timeString + '('+ this.formatAMPM(noon) +'), Previous (Sunrise): ' + this.formatAMPM(sunrise));
 		} else if (nowTime < sunset.getTime()) {
 			const reshTime = sunset.getTime();
 			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Sunset Resh in ' + timeString + ', Previous (Noon): ' + this.formatAMPM(noon));
+			this.statusBarItemEl.setText('Sunset Resh in ' + timeString + '('+ this.formatAMPM(sunset) +'), Previous (Noon): ' + this.formatAMPM(noon));
 		} else if (nowTime < tomorrowMidnight.getTime()) {
 			const reshTime = tomorrowMidnight.getTime();
 			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + ', Previous (Sunset): ' + this.formatAMPM(sunset));
-		} else {
-			console.log('Not Found');
+			//const timeSinceLast = nowTime - sunset.getTime();
+			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + '('+ this.formatAMPM(midnight) +'), Previous (Sunset): ' + this.formatAMPM(midnight));
 		}
-
 		//new Notice(this.getMagickDate());
 	}
 
