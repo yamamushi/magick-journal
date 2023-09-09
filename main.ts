@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	symbolInDayField: true,
 	useLatinNamesForDays: true,
 	useEVInDateField: true,
-	dateFormat: 'DD-MM-YYYY',
+	dateFormat: 'MM-DD-YYYY',
 	padDate: true,
 	dateSeparator: '-',
 }
