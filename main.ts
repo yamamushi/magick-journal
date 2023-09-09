@@ -77,26 +77,17 @@ export default class MagickJournalPlugin extends Plugin {
 		0.75	Last Quarter
 				Waning Crescent
 		 */
-		if (phase < 0.1) {
-			return 'New Moon';
-		} else if (phase < 0.24) {
-			return 'Waxing Crescent';
-		} else if (phase < 0.26) {
-			return 'First Quarter';
-		} else if (phase < 0.49) {
-			return 'Waxing Gibbous';
-		} else if (phase < 0.51) {
-			return 'Full Moon';
-		} else if (phase < 0.74) {
-			return 'Waning Gibbous';
-		} else if (phase < 0.751) {
-			return 'Last Quarter';
-		} else if (phase < 1) {
-			return 'Waning Crescent';
-		} else {
-			return '';
-		}
+		if (phase < 0.1) return 'New Moon';
+		if (phase < 0.24) return 'Waxing Crescent';
+		if (phase < 0.26) return 'First Quarter';
+		if (phase < 0.49) return 'Waxing Gibbous';
+		if (phase < 0.51) return 'Full Moon';
+		if (phase < 0.74) return 'Waning Gibbous';
+		if (phase < 0.751) return 'Last Quarter';
+		if (phase < 1) return 'Waning Crescent';
+		return '';
 	}
+
 	ReloadData(){
 		const params = {format: 'txt', tz: '', lang: 'english', location: '', emojis: false};
 
@@ -150,180 +141,60 @@ export default class MagickJournalPlugin extends Plugin {
 	}
 
 	GetLatinDayOfWeek() {
-		this.LatinDayOfWeek = new Date().toLocaleDateString('en-US', {weekday: 'long'});
-		if (this.LatinDayOfWeek == 'Sunday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Sunday', 'dies Solis');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ☉';
-			}
-		} else if (this.LatinDayOfWeek == 'Monday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Monday', 'dies Lunae');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ☽';
-			}
-		} else if (this.LatinDayOfWeek == 'Tuesday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Tuesday', 'dies Martis');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♂';
-			}
-		} else if (this.LatinDayOfWeek == 'Wednesday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Wednesday', 'dies Mercurii');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ☿';
-			}
-		} else if (this.LatinDayOfWeek == 'Thursday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Thursday', 'dies Iovis');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♃';
-			}
-		} else if (this.LatinDayOfWeek == 'Friday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Friday', 'dies Veneris');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♀';
-			}
-		} else if (this.LatinDayOfWeek == 'Saturday') {
-			if (this.settings.useLatinNamesForDays) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek.replace('Saturday', 'dies Saturni');
-			}
-			if (this.settings.symbolInDayField) {
-				this.LatinDayOfWeek = this.LatinDayOfWeek + ' ♄';
-			}
-		}
+		const daysMapping = {
+			'Sunday': { name: 'dies Solis', symbol: '☉' },
+			'Monday': { name: 'dies Lunae', symbol: '☽' },
+			'Tuesday': { name: 'dies Martis', symbol: '♂' },
+			'Wednesday': { name: 'dies Mercurii', symbol: '☿' },
+			'Thursday': { name: 'dies Iovis', symbol: '♃' },
+			'Friday': { name: 'dies Veneris', symbol: '♀' },
+			'Saturday': { name: 'dies Saturni', symbol: '♄' }
+		};
+
+		const englishDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+		let currentDay = '';
+		// @ts-ignore
+		currentDay = this.settings.useLatinNamesForDays && daysMapping[englishDay]
+			// @ts-ignore
+			? daysMapping[englishDay].name
+			: englishDay;
+		currentDay += ' ';
+
+		// @ts-ignore
+		currentDay += (this.settings.symbolInDayField && daysMapping[englishDay])
+			// @ts-ignore
+			? daysMapping[englishDay].symbol
+			: '';
+
+		this.LatinDayOfWeek = currentDay;
 		return this.LatinDayOfWeek;
 	}
+	UpdateAstroSigns(input: string): string {
+		const astroSignsMapping = {
+			'Aries': '♈',
+			'Taurus': '♉',
+			'Gemini': '♊',
+			'Cancer': '♋',
+			'Leo': '♌',
+			'Virgo': '♍',
+			'Libra': '♎',
+			'Scorpio': '♏',
+			'Sagittarius': '♐',
+			'Capricorn': '♑',
+			'Aquarius': '♒',
+			'Pisces': '♓'
+		};
 
-	UpdateAstroSigns(input : string): string {
-		if (input.includes('Aries')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Aries ';
+		for (const sign in astroSignsMapping) {
+			if (input.includes(sign)) {
+				const output = [
+					this.settings.astrologyIncludeEnglish ? sign : '',
+					// @ts-ignore
+					this.settings.astrologyIncludeEmoji ? astroSignsMapping[sign] : ''
+				].join(' ').trim();
+
+				input = input.replace(sign, output);
 			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♈';
-			}
-			input = input.replace('Aries', output);
-		}
-		if (input.includes('Taurus')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Taurus ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♉';
-			}
-			input = input.replace('Taurus', output);
-		}
-		if (input.includes('Gemini')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Gemini ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♊';
-			}
-			input = input.replace('Gemini', output);
-		}
-		if (input.includes('Cancer')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Cancer ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♋';
-			}
-			input = input.replace('Cancer', output);
-		}
-		if (input.includes('Leo')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Leo ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♌';
-			}
-			input = input.replace('Leo', output);
-		}
-		if (input.includes('Virgo')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Virgo ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♍';
-			}
-			input = input.replace('Virgo', output);
-		}
-		if (input.includes('Libra')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Libra ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♎';
-			}
-			input = input.replace('Libra', output);
-		}
-		if (input.includes('Scorpio')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Scorpio ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♏';
-			}
-			input = input.replace('Scorpio', output);
-		}
-		if (input.includes('Sagittarius')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Sagittarius ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♐';
-			}
-			input = input.replace('Sagittarius', output);
-		}
-		if (input.includes('Capricorn')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Capricorn ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♑';
-			}
-			input = input.replace('Capricorn', output);
-		}
-		if (input.includes('Aquarius')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Aquarius ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♒';
-			}
-			input = input.replace('Aquarius', output);
-		}
-		if (input.includes('Pisces')) {
-			let output = '';
-			if (this.settings.astrologyIncludeEnglish) {
-				output = output + 'Pisces ';
-			}
-			if (this.settings.astrologyIncludeEmoji) {
-				output = output + '♓';
-			}
-			input = input.replace('Pisces', output);
 		}
 		return input;
 	}
@@ -353,37 +224,36 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.ParseFieldListIntoString(magickDateFields).replace(/\*/g, '');
 	}
 
-	ParseFieldListIntoString(input : string[]): string {
-		let output = '';
-		input.forEach(function(field) {
+	ParseFieldListIntoString(input: string[]): string {
+		const mappings = {
+			astro: this.AstroHeading,
+			anno: this.NewAeonYear,
+			day: this.GetLatinDayOfWeek(),
+			ev: this.GetEVDate(),
+			time: '**Time:** ' + this.formatAMPM(new Date()),
+			moon: '**Moon:** ' + this.MoonPhase,
+			location: '**Location:** ' + this.settings.defaultLocation,
+			weather: '**Current Weather:** ' + this.WeatherDescription,
+			blank: ''
+		};
+
+		return input.map((field) => {
 			field = field.trim();
-			if (field == "astro") {
-				output = output + this.AstroHeading + '\n';
-			} else if (field == "anno") {
-				output = output + this.NewAeonYear + '\n';
-			} else if (field == "day") {
-				output = output + this.GetLatinDayOfWeek() + '\n';
-			} else if (field == "ev") {
-				output = output + this.GetEVDate() + '\n';
-			} else if (field == "time") {
-				output = output + '**Time:** '+this.formatAMPM(new Date())+'\n';
-			} else if (field == "moon") {
-				output = output + '**Moon:** ' + this.MoonPhase + '\n';
-			} else if (field == "location") {
-				output = output + '**Location:** ' + this.settings.defaultLocation + '\n';
-			} else if (field == "weather") {
-				output = output + '**Current Weather:** ' + this.WeatherDescription + '\n';
-			} else if (field == "blank") {
-				output = output + '\n';
-			} else {
-				output = output + '**' + field.split(' ')
-					.map((s) => s.charAt(0).toUpperCase() + s.substring(1))
-					.join(' ') + ':** \n';
+
+			if (mappings.hasOwnProperty(field)) {
+				// @ts-ignore
+				return mappings[field];
 			}
-		}, this);
-		// @ts-ignore
-		return output;
+
+			const capitalizedField = field.split(' ')
+				.map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+				.join(' ');
+
+			return '**' + capitalizedField + ':**';
+
+		}).join('\n');
 	}
+
 
 	GetFullHeading():string {
 		// First we get the default fields from the settings
@@ -439,14 +309,8 @@ export default class MagickJournalPlugin extends Plugin {
 		const weatherParams = { latitude: '', longitude: '',
 			hourly: 'temperature_2m,pressure_msl,surface_pressure,weathercode', temperature_unit: '',
 			windspeed_unit: 'mph', precipitation_unit: '', timezone: '', forecast_days: 1, current_weather: 'true'};
-		if (!this.settings.weatherUseGeolocation) {
-			const fields = this.settings.weatherGeolocation.split(',');
-			weatherParams['latitude'] = fields[0];
-			weatherParams['longitude'] = fields[1];
-		} else {
-			weatherParams['latitude'] = this.GeoLocation.lat;
-			weatherParams['longitude'] = this.GeoLocation.lon;
-		}
+		weatherParams['latitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lat : this.settings.weatherGeolocation.split(',')[0];
+		weatherParams['longitude'] = this.settings.weatherUseGeolocation ? this.GeoLocation.lon : this.settings.weatherGeolocation.split(',')[1];
 
 		weatherParams['temperature_unit'] = this.settings.weatherTempUnits.toLowerCase();
 		weatherParams['windspeed_unit'] = 'mph';
@@ -459,28 +323,18 @@ export default class MagickJournalPlugin extends Plugin {
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
 			let temperature = data['current_weather']['temperature'].toFixed(Number(this.settings.weatherTempDecimalPlaces));
-			let index = '';
 			const currentTime = data['current_weather']['time'];
-			// loop through hourly times to find the index of the current time
-			for (let i = 0; i < data['hourly']['time'].length; i++) {
-				if (data['hourly']['time'][i] == currentTime) {
-					index = String(i);
-				}
-			}
+			const index = data['hourly']['time'].indexOf(currentTime).toString();
 
-			let pressure: string;
-			if (this.settings.weatherPressureUnits.toLowerCase() != 'mbar') {
-				pressure = this.MbrToInches(data['hourly']['pressure_msl'][index]).toFixed(2) + 'in';
-			} else {
-				pressure = data['hourly']['pressure_msl'][index].toFixed(2) + 'mbar';
-			}
+			const pressureInMbar = data['hourly']['pressure_msl'][index].toFixed(2);
+			const pressure = this.settings.weatherPressureUnits.toLowerCase() === 'mbar'
+				? `${pressureInMbar}mbar`
+				: `${this.MbrToInches(pressureInMbar).toFixed(2)}in`;
 
 			const description = this.WeatherCodeToString(data['current_weather']['weathercode']);
-			if (this.settings.weatherTempUnits.toLowerCase() == 'celsius') {
-				temperature = temperature + '°C';
-			} else {
-				temperature = temperature + '°F';
-			}
+			const temperatureUnit = this.settings.weatherTempUnits.toLowerCase() === 'celsius' ? '°C' : '°F';
+			temperature += temperatureUnit;
+
 
 			const options = [
 				this.settings.weatherShowDescription ? description : null,
@@ -579,8 +433,7 @@ export default class MagickJournalPlugin extends Plugin {
 					editor.getCursor()
 				)
 				const lineCount = fullHeading.split('\n').length;
-				const offset = fullHeading.split('\n')[fullHeading.split('\n').length-2].length;
-				editor.setCursor(editor.getCursor().line + lineCount - 2, offset );
+				editor.setCursor(editor.getCursor().line + lineCount );
 			},
 		});
 
