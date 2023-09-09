@@ -78,6 +78,8 @@ Example Output:
   * **Weather**: To insert the current local weather
   * **Blank**: To insert a blank line.
 
+  **Unrecognized options will be inserted as additional fields.**
+
 Example Configuration:
 
   	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other Field 1, Other Field 2
@@ -85,8 +87,6 @@ Example Configuration:
 ### Magick Date
 
 * **Magick Date Fields**: Comma separated fields to populate the magick date with. Available options are the same as for the [header](#header) fields.
-
-	**Unrecognized options will be inserted as additional fields.**
 
 Example Configuration:
 
