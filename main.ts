@@ -123,6 +123,7 @@ export default class MagickJournalPlugin extends Plugin {
 			});
 		}
 	}
+
 	async fetchEraLegis(params : {format: string, tz: string, lang: string, location: string}): Promise<string> {
 		const base_url = 'https://date.eralegis.info/';
 		const url = new URL(base_url + (''));
@@ -195,6 +196,7 @@ export default class MagickJournalPlugin extends Plugin {
 		}
 		return input;
 	}
+
 	UpdateEraLegisVars(EraLegisOutput : string) {
 		let formatted = EraLegisOutput.replace('Year', 'Anno');
 		formatted = formatted.replace('of the New Aeon', 'A.N.');
