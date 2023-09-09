@@ -46,7 +46,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	dateFormat: 'MM-DD-YYYY',
 	padDate: true,
 	dateSeparator: '-',
-	reshStatusBar: true,
+	reshStatusBar: false,
 }
 
 export default class MagickJournalPlugin extends Plugin {
