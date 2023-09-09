@@ -59,13 +59,14 @@ export default class MagickJournalPlugin extends Plugin {
 	NewAeonYear = '';
 	TodaysDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
-	ReloadSunMoonData(date : Date){
+
+	reloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
-		this.SolarData['moon_phase'] = this.MoonPhaseToName(SunCalc.getMoonIllumination(date)['phase']);
+		this.SolarData['moon_phase'] = this.moonPhaseToName(SunCalc.getMoonIllumination(date)['phase']);
 		this.MoonPhase = this.SolarData['moon_phase'] + ' ' + this.SolarData['moon_illumination'] + '%';
 	}
 
-	MoonPhaseToName(phase : number) : string {
+	moonPhaseToName(phase : number) : string {
 		/*
 		Phase	Name
 		0		New Moon
@@ -88,7 +89,7 @@ export default class MagickJournalPlugin extends Plugin {
 		return '';
 	}
 
-	ReloadData(){
+	reloadData(){
 		const params = {format: 'txt', tz: '', lang: 'english', location: '', emojis: false};
 
 		const tzOffset = new Date().getTimezoneOffset();
@@ -103,10 +104,10 @@ export default class MagickJournalPlugin extends Plugin {
 					if (data != null) {
 						this.GeoLocation = data;
 						params['location'] = this.GeoLocation.lat + ':' + this.GeoLocation.lon;
-						this.ReloadSunMoonData(new Date());
-						this.UpdateWeatherDescription();
+						this.reloadSunMoonData(new Date());
+						this.updateWeatherDescription();
 						this.fetchEraLegis(params).then(data => {
-							this.UpdateEraLegisVars(data);
+							this.updateEraLegisVars(data);
 						});
 					}
 				})
@@ -116,10 +117,10 @@ export default class MagickJournalPlugin extends Plugin {
 		} else {
 			const geoFields = this.settings.customLatLonCoords.split(',');
 			params['location'] = geoFields[0].trim() + ':' + geoFields[1].trim();
-			this.ReloadSunMoonData(new Date());
-			this.UpdateWeatherDescription();
+			this.reloadSunMoonData(new Date());
+			this.updateWeatherDescription();
 			this.fetchEraLegis(params).then(data => {
-				this.UpdateEraLegisVars(data);
+				this.updateEraLegisVars(data);
 			});
 		}
 	}
@@ -138,7 +139,7 @@ export default class MagickJournalPlugin extends Plugin {
 			});
 	}
 
-	GetLatinDayOfWeek() {
+	getLatinDayOfWeek() {
 		const daysMapping = {
 			'Sunday': { name: 'dies Solis', symbol: '☉' },
 			'Monday': { name: 'dies Lunae', symbol: '☽' },
@@ -167,7 +168,7 @@ export default class MagickJournalPlugin extends Plugin {
 		this.LatinDayOfWeek = currentDay;
 		return this.LatinDayOfWeek;
 	}
-	UpdateAstroSigns(input: string): string {
+	updateAstroSigns(input: string): string {
 		const astroSignsMapping = {
 			'Aries': '♈',
 			'Taurus': '♉',
@@ -197,11 +198,11 @@ export default class MagickJournalPlugin extends Plugin {
 		return input;
 	}
 
-	UpdateEraLegisVars(EraLegisOutput : string) {
+	updateEraLegisVars(EraLegisOutput : string) {
 		let formatted = EraLegisOutput.replace('Year', 'Anno');
 		formatted = formatted.replace('of the New Aeon', 'A.N.');
 		// Replaces astro signs string with string according to settings
-		formatted = this.UpdateAstroSigns(formatted);
+		formatted = this.updateAstroSigns(formatted);
 		// Split formatted string into an array by : symbol
 		const formattedArray = formatted.split(':');
 		// solis is the first part of the array
@@ -217,18 +218,18 @@ export default class MagickJournalPlugin extends Plugin {
 		this.AstroHeading = this.SunEraLegis + ':' + this.MoonEraLegis;
 	}
 
-	GetMagickDate(): string {
+	getMagickDate(): string {
 		// First we get the default fields from the settings
 		const magickDateFields = this.settings.magickDateFields.toLowerCase().split(',');
-		return this.ParseFieldListIntoString(magickDateFields).replace(/\*/g, '');
+		return this.parseFieldListIntoString(magickDateFields).replace(/\*/g, '');
 	}
 
-	ParseFieldListIntoString(input: string[]): string {
+	parseFieldListIntoString(input: string[]): string {
 		const mappings = {
 			astro: this.AstroHeading,
 			anno: this.NewAeonYear,
-			day: this.GetLatinDayOfWeek(),
-			ev: this.GetEVDate(),
+			day: this.getLatinDayOfWeek(),
+			ev: this.getEVDate(),
 			time: '**Time:** ' + this.formatAMPM(new Date()),
 			moon: '**Moon:** ' + this.MoonPhase,
 			location: '**Location:** ' + this.settings.defaultLocation,
@@ -253,15 +254,14 @@ export default class MagickJournalPlugin extends Plugin {
 		}).join('\n');
 	}
 
-
-	GetFullHeading():string {
+	getFullHeading():string {
 		// First we get the default fields from the settings
 		const defaultFields = this.settings.headerFields.toLowerCase().split(',');
 		// Then we loop through each field and add it to the output
-		return this.ParseFieldListIntoString(defaultFields);
+		return this.parseFieldListIntoString(defaultFields);
 	}
 
-	GetExtraFields():string {
+	getExtraFields():string {
 		let output = ''
 		// First we get the default fields from the settings
 		const defaultFields = this.settings.headerFields.toLowerCase().split(',');
@@ -278,7 +278,7 @@ export default class MagickJournalPlugin extends Plugin {
 		return output
 	}
 
-	GetEVDate() {
+	getEVDate() {
 		const today = new Date();
 		let components = {}
 
@@ -300,11 +300,10 @@ export default class MagickJournalPlugin extends Plugin {
 		this.TodaysDate = this.settings.dateFormat.split('-').map(part => components[part]).join(this.settings.dateSeparator);
 		this.TodaysDate += this.settings.useEVInDateField ? ' e.v.' : '';
 
-
 		return this.TodaysDate
 	}
 
-	UpdateWeatherDescription(): string {
+	updateWeatherDescription(): string {
 		const weatherParams = { latitude: '', longitude: '',
 			hourly: 'temperature_2m,pressure_msl,surface_pressure,weathercode', temperature_unit: '',
 			windspeed_unit: 'mph', precipitation_unit: '', timezone: '', forecast_days: 1, current_weather: 'true'};
@@ -328,9 +327,9 @@ export default class MagickJournalPlugin extends Plugin {
 			const pressureInMbar = data['hourly']['pressure_msl'][index].toFixed(2);
 			const pressure = this.settings.weatherPressureUnits.toLowerCase() === 'mbar'
 				? `${pressureInMbar}mbar`
-				: `${this.MbrToInches(pressureInMbar).toFixed(2)}in`;
+				: `${this.mbarToInches(pressureInMbar).toFixed(2)}in`;
 
-			const description = this.WeatherCodeToString(data['current_weather']['weathercode']);
+			const description = this.weatherCodeToString(data['current_weather']['weathercode']);
 			const temperatureUnit = this.settings.weatherTempUnits.toLowerCase() === 'celsius' ? '°C' : '°F';
 			temperature += temperatureUnit;
 
@@ -345,7 +344,7 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.WeatherDescription;
 	}
 
-	WeatherCodeToString(code : number) : string {
+	weatherCodeToString(code : number) : string {
 		/*
 		Code		Description
 		0			Clear Sky
@@ -380,7 +379,7 @@ export default class MagickJournalPlugin extends Plugin {
 		return WeatherCodes[code];
 	}
 
-	MbrToInches(mbr : number) : number {
+	mbarToInches(mbr : number) : number {
 		return mbr * 0.02953;
 	}
 
@@ -398,14 +397,14 @@ export default class MagickJournalPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		this.ReloadData()
+		this.reloadData()
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('wand', 'Greet', (_: MouseEvent) => {
 			// Called when the user clicks the icon.
-			this.ReloadData();
-			this.GetFullHeading();
-			new Notice(this.GetMagickDate());
+			this.reloadData();
+			this.getFullHeading();
+			new Notice(this.getMagickDate());
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -415,8 +414,8 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "full-heading",
 			name: "Insert Full Journal Heading",
 			editorCallback: (editor: Editor) => {
-				this.ReloadData();
-				const fullHeading = this.GetFullHeading();
+				this.reloadData();
+				const fullHeading = this.getFullHeading();
 				editor.replaceRange(
 					fullHeading + '  ',
 					editor.getCursor()
@@ -433,7 +432,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-astro",
 			name: "Insert Astrological Info",
 			editorCallback: (editor: Editor) => {
-				this.ReloadData();
+				this.reloadData();
 				editor.replaceRange(
 					this.AstroHeading + '\n',
 					editor.getCursor()
@@ -446,7 +445,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-extra-fields",
 			name: "Insert Extra Fields",
 			editorCallback: (editor: Editor) => {
-				const additionalFields = this.GetExtraFields();
+				const additionalFields = this.getExtraFields();
 				editor.replaceRange(
 					additionalFields,
 					editor.getCursor()
@@ -477,7 +476,7 @@ export default class MagickJournalPlugin extends Plugin {
 			name: "Insert Date EV",
 			editorCallback: (editor: Editor) => {
 				editor.replaceRange(
-					this.GetEVDate() + '\n',
+					this.getEVDate() + '\n',
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
@@ -503,7 +502,7 @@ export default class MagickJournalPlugin extends Plugin {
 			name: "Insert Day",
 			editorCallback: (editor: Editor) => {
 				editor.replaceRange(
-					this.GetLatinDayOfWeek() + '\n',
+					this.getLatinDayOfWeek() + '\n',
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
@@ -515,7 +514,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-weather",
 			name: "Insert Weather",
 			editorCallback: (editor: Editor) => {
-				this.ReloadData();
+				this.reloadData();
 				editor.replaceRange(
 					'**Current Weather:** ' + this.WeatherDescription + '\n',
 					editor.getCursor()
@@ -529,7 +528,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-moon",
 			name: "Insert Moon Phase",
 			editorCallback: (editor: Editor) => {
-				this.ReloadSunMoonData(new Date());
+				this.reloadSunMoonData(new Date());
 				editor.replaceRange(
 					'**Moon:** ' + this.MoonPhase + '\n',
 					editor.getCursor()
@@ -573,7 +572,6 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		const {containerEl} = this;
-
 		containerEl.empty();
 
 		containerEl.createEl("h1", { text: "Magick Journal Settings" });
@@ -592,7 +590,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.weatherUseGeolocation = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				}));
 
 		new Setting(containerEl)
@@ -603,12 +601,14 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.customLatLonCoords)
 				.onChange(async (value) => {
 					this.plugin.settings.customLatLonCoords = value;
-					this.plugin.UpdateWeatherDescription();
+					this.plugin.updateWeatherDescription();
 					await this.plugin.saveSettings();
-				}).then(() => {this.plugin.ReloadData()}));
+				}).then(() => {this.plugin.reloadData()}));
+
 
 		containerEl.createEl("br");
 		containerEl.createEl("br");
+
 
 		const entry_settings = containerEl.createEl("div");//, { cls: "settings_section" });
 		entry_settings.createEl("div", { text: "Default Entries", cls: "settings_section_title" });
@@ -626,8 +626,10 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+
 		containerEl.createEl("br");
 		containerEl.createEl("br");
+
 
 		const header_field_settings = containerEl.createEl("div");
 		header_field_settings.createEl("div", { text: "Header", cls: "settings_section_title" });
@@ -651,6 +653,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.createEl("br");
 		containerEl.createEl("br");
 
+
 		const magickdate_field_settings = containerEl.createEl("div");
 		magickdate_field_settings.createEl("div", { text: "Magick Date", cls: "settings_section_title" });
 		magickdate_field_settings.createEl("small", { text: "Magick Date Settings", cls: "settings_section_description" });
@@ -670,9 +673,9 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				}));
 
 
+		containerEl.createEl("br");
+		containerEl.createEl("br");
 
-		containerEl.createEl("br");
-		containerEl.createEl("br");
 
 		const astro_field_settings = containerEl.createEl("div");
 		astro_field_settings.createEl("div", { text: "Astrology", cls: "settings_section_title" });
@@ -688,7 +691,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.astrologyIncludeEmoji = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				}));
 
 		new Setting(containerEl)
@@ -701,11 +704,13 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.astrologyIncludeEnglish = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				}));
+
 
 		containerEl.createEl("br");
 		containerEl.createEl("br");
+
 
 		const weather_field_settings = containerEl.createEl("div");
 		weather_field_settings.createEl("div", { text: "Weather", cls: "settings_section_title" });
@@ -721,7 +726,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.weatherShowDescription = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				}));
 
 		new Setting(containerEl)
@@ -734,7 +739,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.weatherShowTemp = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				}));
 
 		new Setting(containerEl)
@@ -747,7 +752,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.weatherShowPressure = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				}));
 
 
@@ -773,7 +778,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				dropDown.onChange(async (value) =>	{
 					this.plugin.settings.weatherTempUnits = value;
 					await this.plugin.saveSettings();
-					this.plugin.ReloadData();
+					this.plugin.reloadData();
 				});
 			});
 
@@ -795,6 +800,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.createEl("br");
 		containerEl.createEl("br");
 
+
 		const time_field_settings = containerEl.createEl("div");
 		time_field_settings.createEl("div", { text: "Time", cls: "settings_section_title" });
 		time_field_settings.createEl("small", { text: "Time Settings", cls: "settings_section_description" });
@@ -814,6 +820,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 
 		containerEl.createEl("br");
 		containerEl.createEl("br");
+
 
 		const day_field_settings = containerEl.createEl("div");
 		day_field_settings.createEl("div", { text: "Day", cls: "settings_section_title" });
@@ -843,8 +850,10 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+
 		containerEl.createEl("br");
 		containerEl.createEl("br");
+
 
 		const date_field_settings = containerEl.createEl("div");
 		date_field_settings.createEl("div", { text: "Date", cls: "settings_section_title" });
@@ -897,6 +906,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 					this.plugin.settings.padDate = value;
 					await this.plugin.saveSettings();
 				}));
+
 	}
 }
 
