@@ -189,6 +189,7 @@ export default class MagickJournalPlugin extends Plugin {
 		this.LatinDayOfWeek = currentDay;
 		return this.LatinDayOfWeek;
 	}
+
 	updateAstroSigns(input: string): string {
 		const astroSignsMapping = {
 			'Aries': '♈',
@@ -732,10 +733,12 @@ export default class MagickJournalPlugin extends Plugin {
 
 		// Adds a command to insert date AN
 		this.addCommand({
-			id: "insert-date-an",
-			name: "Insert Date AN",
+			id: "insert-new-aeon-year",
+			name: "Insert New Aeon Year",
 			editorCallback: (editor: Editor) => {
 				editor.replaceRange(
+					// The year only changes once a year, obviously, so there's no need to
+					// Run a full reloadData() here, just print what we already have
 					this.NewAeonYear + '\n',
 					editor.getCursor()
 				);

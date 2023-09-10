@@ -45,7 +45,7 @@ Example Output:
 
 * **insert-date-ev**: Inserts the current EV date.
 
-* **insert-date-an**: Inserts the current New Aeon date.
+* **insert-new-aeon-year**: Inserts the current New Aeon year.
 
 * **insert-day**: Inserts the latin day of the week.
 
