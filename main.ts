@@ -803,6 +803,9 @@ export default class MagickJournalPlugin extends Plugin {
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		const second = 1000;
 		this.registerInterval(window.setInterval(() => this.liberReshHandler(), second));
+
+		// Reload data every hour
+		this.registerInterval(window.setInterval(() => this.reloadData(), second*60*60));
 	}
 
 	onunload() {

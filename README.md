@@ -49,7 +49,7 @@ Example Output:
 
 * **insert-day**: Inserts the latin day of the week.
 
-* **insert-weather**: Inserts current local weather conditions, temperature and air pressure.
+* **insert-weather**: Inserts current local weather conditions, temperature and air pressure (if enabled in settings).
 
 * **insert-moon**: Inserts current phase of the moon and illumination percentage.
 
