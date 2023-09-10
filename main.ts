@@ -10,6 +10,7 @@ interface MagickJournalSettings {
 	astrologyIncludeEnglish: boolean,
 	useGeolocation: boolean,
 	customLatLonCoords: string,
+	weatherEnable: boolean,
 	weatherTempDecimalPlaces: string,
 	weatherTempUnits: string,
 	weatherPressureUnits: string,
@@ -43,6 +44,7 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	astrologyIncludeEnglish: true,
 	useGeolocation: true,
 	customLatLonCoords: '',
+	weatherEnable: true,
 	weatherTempDecimalPlaces: '2',
 	weatherTempUnits: 'fahrenheit',
 	weatherPressureUnits: 'inches',
@@ -349,6 +351,10 @@ export default class MagickJournalPlugin extends Plugin {
 	}
 
 	updateWeatherDescription(): string {
+		if (!this.settings.weatherEnable) {
+			this.WeatherDescription = '';
+			return this.WeatherDescription;
+		}
 		const weatherParams = { latitude: '', longitude: '',
 			hourly: 'temperature_2m,pressure_msl,surface_pressure,weathercode', temperature_unit: '',
 			windspeed_unit: 'mph', precipitation_unit: '', timezone: '', forecast_days: 1, current_weather: 'true'};
@@ -1008,6 +1014,19 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		const weather_field_settings = containerEl.createEl("div");
 		weather_field_settings.createEl("div", { text: "Weather", cls: "settings_section_title" });
 		weather_field_settings.createEl("small", { text: "Weather Settings", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Enable Weather Lookup')
+			.setDesc('Whether or not to lookup weather data')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Include the weather description in the weather field.')
+				.setValue(this.plugin.settings.weatherEnable)
+				.onChange(async (value) => {
+					this.plugin.settings.weatherEnable = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
 
 		new Setting(containerEl)
 			.setName('Include Weather Description')

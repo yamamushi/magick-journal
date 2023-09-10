@@ -175,6 +175,8 @@ Example Configuration:
 
 ### Weather
 
+* **Enable Weather Lookup**: Enable or disable weather lookups.
+
 * **Include Weather Description**: Whether to include the weather description in the weather field.
 
 * **Include Temperature**: Whether to include the temperature in the weather field.
