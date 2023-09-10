@@ -1,4 +1,4 @@
-import {App, Editor, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
+import {App, Editor, Notice, Platform, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import * as SunCalc from 'suncalc';
 
 interface MagickJournalSettings {
@@ -802,7 +802,9 @@ export default class MagickJournalPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		const second = 1000;
-		this.registerInterval(window.setInterval(() => this.liberReshHandler(), second));
+		if (!Platform.isMobile) {
+			this.registerInterval(window.setInterval(() => this.liberReshHandler(), second));
+		}
 
 		// Reload data every hour
 		this.registerInterval(window.setInterval(() => this.reloadData(), second*60*60));
