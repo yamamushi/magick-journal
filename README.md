@@ -5,7 +5,7 @@ This plugin adds a number of tools for practitioners of Magick (Specifically The
 * [Commands](#commands)
 * [Settings](#settings)
 * [About](#about)
-* [Todo](#todo)
+* [Contact](#contact)
 
 ## Commands
 
