@@ -55,11 +55,23 @@ Example Output:
 
 * **insert-resh**: Inserts the Resh schedule for today.
 
+Example Output:
+
+	**Resh Times for Sep 10, 2023**
+
+     Sunrise: 6:27 AM MDT
+     Noon: 12:56 PM MDT
+     Sunset: 7:26 PM MDT
+     Midnight: 12:56 AM MDT
+
 ## Settings
 
 - [Geolocation](#geolocation)
+- [Liber Resh Clock](#liber-resh-clock)
 - [Default Entries](#default-entries)
 - [Header](#header)
+- [Entries](#entries)
+- [Checklist](#checklist)
 - [Magick Date](#magick-date)
 - [Astro](#astro)
 - [Weather](#weather)
@@ -93,7 +105,7 @@ Example Output:
 
 ### Default Entries
 
-**Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
+* **Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
 
 ### Header 
 
@@ -203,6 +215,8 @@ magick-journal pulls the current astrological correspondence and Thelemic date f
 All the services are provided free of charge, but if you find this plugin useful, please consider donating to them (especially EraLegis ❤️).
 
 If you're wondering why it's spelled "Magick" instead of "Magic": https://simple.wikipedia.org/wiki/Magick
+
+More information about Resh can be found here: http://www.thelemapedia.org/index.php/Liber_Resh
 
 ## Contact
 
