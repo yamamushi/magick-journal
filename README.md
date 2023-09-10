@@ -69,27 +69,27 @@ Example Output:
 
 ### Geolocation
 
-**IP Geolocation**: Whether to use IP geolocation to determine location for weather and Astrological lookups. If disabled, the configured coordinates will be used.
+* **IP Geolocation**: Whether to use IP geolocation to determine location for weather and Astrological lookups. If disabled, the configured coordinates will be used.
 
-**Geolocation Coordinates**: The coordinates to use for weather lookups if IP geolocation is disabled. This should be in the format `latitude,longitude` (e.g. `38.8339,-104.8214`).
+* **Geolocation Coordinates**: The coordinates to use for weather lookups if IP geolocation is disabled. This should be in the format `latitude,longitude` (e.g. `38.8339,-104.8214`).
 
 ### Liber Resh Clock
 
-**Enable Liber Resh Clock**: Whether to enable the Liber Resh Clock statusbar. This will tell you when the next Resh is, and when the previous Resh was.
+* **Enable Liber Resh Clock**: Whether to enable the Liber Resh Clock statusbar. This will tell you when the next Resh is, and when the previous Resh was.
 
-**Use Altitude in Resh Calculations**: Whether to use the configured altitude in the Resh calculations. If disabled, the altitude will be ignored.
+* **Use Altitude in Resh Calculations**: Whether to use the configured altitude in the Resh calculations. If disabled, the altitude will be ignored.
 
-**Custom Altitude**: The altitude to use for Resh calculations. This should be in meters.
+* **Custom Altitude**: The altitude to use for Resh calculations. This should be in meters.
 
-**Display Upcoming Resh Name**: Whether to display the name of the upcoming Resh in the statusbar.
+* **Display Upcoming Resh Name**: Whether to display the name of the upcoming Resh in the statusbar.
 
-**Display Upcoming Countdown**: Whether to display the countdown to the upcoming Resh in the statusbar.
+* **Display Upcoming Countdown**: Whether to display the countdown to the upcoming Resh in the statusbar.
 
-**Display Upcoming Time**: Whether to display the time of the upcoming Resh in the statusbar.
+* **Display Upcoming Time**: Whether to display the time of the upcoming Resh in the statusbar.
 
-**Display Previous Resh Name**: Whether to display the name of the previous Resh in the statusbar.
+* **Display Previous Resh Name**: Whether to display the name of the previous Resh in the statusbar.
 
-**Display Previous Resh Time**: Whether to display the time of the previous Resh in the statusbar.
+* **Display Previous Resh Time**: Whether to display the time of the previous Resh in the statusbar.
 
 ### Default Entries
 
