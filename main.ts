@@ -4,6 +4,7 @@ import * as SunCalc from 'suncalc';
 interface MagickJournalSettings {
 	defaultLocation: string;
 	headerFields: string;
+	newEntryFields: string;
 	magickDateFields: string,
 	astrologyIncludeEmoji: boolean,
 	astrologyIncludeEnglish: boolean,
@@ -24,11 +25,19 @@ interface MagickJournalSettings {
 	dateSeparator: string,
 	reshStatusBar: boolean,
 	checkListItems: string,
+	reshDisplayPreviousTime: boolean,
+	reshDisplayPreviousName: boolean,
+	reshDisplayUpcomingTime: boolean,
+	reshDisplayUpcomingCountdown: boolean,
+	reshDisplayUpcomingName: boolean,
+	reshUseAltitude: boolean,
+	reshAltitude: string,
 }
 
 const DEFAULT_SETTINGS: MagickJournalSettings = {
 	defaultLocation: '',
 	headerFields: 'Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other',
+	newEntryFields: 'Time, Moon, Weather',
 	magickDateFields: 'Astro, Anno, Day, EV, Time',
 	astrologyIncludeEmoji: true,
 	astrologyIncludeEnglish: true,
@@ -49,6 +58,13 @@ const DEFAULT_SETTINGS: MagickJournalSettings = {
 	dateSeparator: '-',
 	reshStatusBar: false,
 	checkListItems: '',
+	reshDisplayPreviousTime: true,
+	reshDisplayPreviousName: true,
+	reshDisplayUpcomingTime: true,
+	reshDisplayUpcomingCountdown: true,
+	reshDisplayUpcomingName: true,
+	reshUseAltitude: false,
+	reshAltitude: '0',
 }
 
 export default class MagickJournalPlugin extends Plugin {
@@ -64,7 +80,6 @@ export default class MagickJournalPlugin extends Plugin {
 	TodaysDate = '';
 	GeoLocation = {lat: '', lon: '', timezone: ''};
 	statusBarItemEl = this.addStatusBarItem();
-	lastReshNotfied = '';
 
 	reloadSunMoonData(date : Date){
 		this.SolarData['moon_illumination'] = (SunCalc.getMoonIllumination(date)['fraction']*100).toFixed(0);
@@ -118,7 +133,7 @@ export default class MagickJournalPlugin extends Plugin {
 					}
 				})
 				.catch(error => {
-					console.error('Error fetching or parsing data:', error);
+					console.error('Error fetching or parsing ip-api data:', error);
 				});
 		} else {
 			const geoFields = this.settings.customLatLonCoords.split(',');
@@ -157,7 +172,7 @@ export default class MagickJournalPlugin extends Plugin {
 		};
 
 		const englishDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-		let currentDay = '';
+		let currentDay: string;
 		// @ts-ignore
 		currentDay = this.settings.useLatinNamesForDays && daysMapping[englishDay]
 			// @ts-ignore
@@ -230,7 +245,7 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.parseFieldListIntoString(magickDateFields).replace(/\*/g, '');
 	}
 
-	parseCheckList(input: string): string {
+	parseCheckList(): string {
 		let output = ''
 		// First we get the default fields from the settings
 		const defaultFields = this.settings.checkListItems.split(',');
@@ -250,11 +265,12 @@ export default class MagickJournalPlugin extends Plugin {
 			anno: this.NewAeonYear,
 			day: this.getLatinDayOfWeek(),
 			ev: this.getEVDate(),
-			time: '**Time:** ' + this.formatAMPM(new Date()),
+			time: '**' + this.formatAMPM(new Date()) + '**',
 			moon: '**Moon:** ' + this.MoonPhase,
 			location: '**Location:** ' + this.settings.defaultLocation,
 			weather: '**Current Weather:** ' + this.WeatherDescription,
-			checklist: this.parseCheckList(this.settings.checkListItems),
+			checklist: this.parseCheckList(),
+			resh: this.getReshTimes(),
 			blank: ''
 		};
 
@@ -270,7 +286,7 @@ export default class MagickJournalPlugin extends Plugin {
 				.map((s) => s.charAt(0).toUpperCase() + s.substring(1))
 				.join(' ');
 
-			return '**' + capitalizedField + ':**';
+			return '**' + capitalizedField + ':** ';
 
 		}).join('\n');
 	}
@@ -282,6 +298,13 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.parseFieldListIntoString(defaultFields);
 	}
 
+	getNewEntry():string {
+		// First we get the default fields from the settings
+		const defaultFields = this.settings.newEntryFields.toLowerCase().split(',');
+		// Then we loop through each field and add it to the output
+		return this.parseFieldListIntoString(defaultFields);
+	}
+
 	getExtraFields():string {
 		let output = ''
 		// First we get the default fields from the settings
@@ -289,11 +312,11 @@ export default class MagickJournalPlugin extends Plugin {
 		// Then we loop through each field and add it to the output
 		defaultFields.forEach(function(field) {
 			field = field.trim();
-			const predefinedFields = ["astro", "anno", "day", "ev", "time", "moon", "location", "weather", "checklist", "blank"];
+			const predefinedFields = ["astro", "anno", "day", "ev", "time", "moon", "location", "weather", "checklist", "resh", "blank"];
 			if (!predefinedFields.includes(field)) {
 				output += '**' + field.split(' ')
 					.map(s => s.charAt(0).toUpperCase() + s.substring(1))
-					.join(' ') + ':** \n';
+					.join(' ') + ':**  \n';
 			}
 		}, this);
 		return output
@@ -337,7 +360,6 @@ export default class MagickJournalPlugin extends Plugin {
 		weatherParams['timezone'] = this.GeoLocation.timezone;
 
 		const weatherURL = new URL('https://api.open-meteo.com/v1/forecast');
-		//console.log(weatherURL)
 		// @ts-ignore
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
@@ -428,54 +450,143 @@ export default class MagickJournalPlugin extends Plugin {
 		return hours + "h " + minutes + "m " + seconds + "s ";
 	}
 
+	getSunCalcTimes(date : Date) : SunCalc.GetTimesResult {
+		if (this.settings.useGeolocation) {
+			const lat = Number(this.GeoLocation.lat);
+			const lon = Number(this.GeoLocation.lon);
+			const altitude = this.settings.reshUseAltitude ? Number(this.settings.reshAltitude) : undefined;
+
+			return altitude ? SunCalc.getTimes(date, Number(this.GeoLocation.lat), lon, altitude) : SunCalc.getTimes(date, lat, lon);
+		} else {
+			const geoFields = this.settings.customLatLonCoords.split(',');
+			const lat = Number(geoFields[0].trim());
+			const lon = Number(geoFields[1].trim());
+			const altitude = this.settings.reshUseAltitude ? Number(this.settings.reshAltitude) : undefined;
+
+			return altitude ? SunCalc.getTimes(date, lat, lon, altitude) : SunCalc.getTimes(date, lat, lon);
+		}
+	}
+
+	getUpcomingResh() : { name: string, time: string, countdown: string, previousName: string, previousTime: string } {
+		const todayTimes = this.getSunCalcTimes(new Date());
+		const yesterdayTimes = this.getSunCalcTimes(new Date(new Date().getTime() - 24 * 60 * 60 * 1000));
+		const tomorrowTimes = this.getSunCalcTimes(new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+		const now = new Date();
+		const nowTime = now.getTime();
+		// eslint-disable-next-line prefer-const
+		let output: { name: string, time: string, countdown: string, previousName: string, previousTime: string } = {
+			name: '',
+			time: '',
+			countdown: '',
+			previousName: '',
+			previousTime: ''
+		};
+
+		const reshPeriods = [
+			{
+				endTime: todayTimes.sunrise,
+				name: 'Sunrise Resh',
+				previous: { name: 'Midnight', time: todayTimes.nadir }
+			},
+			{
+				endTime: todayTimes.solarNoon,
+				name: 'Noon Resh',
+				previous: { name: 'Sunrise', time: todayTimes.sunrise }
+			},
+			{
+				endTime: todayTimes.sunset,
+				name: 'Sunset Resh',
+				previous: { name: 'Noon', time: todayTimes.solarNoon }
+			},
+			{
+				endTime: todayTimes.nadir,
+				name: 'Midnight Resh',
+				previous: { name: 'Sunset', time: yesterdayTimes.sunset }
+			},
+			{
+				endTime: tomorrowTimes.nadir,
+				name: 'Midnight Resh',
+				previous: { name: 'Sunset', time: todayTimes.sunset }
+			},
+			{
+				endTime: tomorrowTimes.sunrise,
+				name: 'Sunrise Resh',
+				previous: { name: 'Midnight', time: tomorrowTimes.nadir }
+			}
+		];
+
+		for (const period of reshPeriods) {
+			if (nowTime < period.endTime.getTime()) {
+				output.name = period.name;
+				output.time = this.formatAMPM(period.endTime);
+				output.countdown = this.countdownToString(period.endTime.getTime());
+				output.previousName = period.previous.name;
+				output.previousTime = this.formatAMPM(period.previous.time);
+				break;
+			} else if (nowTime == period.endTime.getTime()) {
+				output.name = period.name;
+				output.time = this.formatAMPM(period.endTime);
+				output.countdown = 'Now';
+				output.previousName = period.previous.name;
+				output.previousTime = this.formatAMPM(period.previous.time);
+				break;
+			}
+		}
+		return output;
+	}
+
+	formatReshOutput(input:{ name: string, time: string, countdown: string, previousName: string, previousTime: string }) : string {
+		let output = '';
+		if (this.settings.reshDisplayUpcomingName) {
+			output += input.name;
+		}
+		if (this.settings.reshDisplayUpcomingCountdown) {
+			output += this.settings.reshDisplayUpcomingName ? ' in ' : '';
+			output += input.countdown;
+		}
+		if (this.settings.reshDisplayUpcomingTime) {
+			output += ` (${input.time})`;
+		}
+		if (this.settings.reshDisplayUpcomingName || this.settings.reshDisplayUpcomingCountdown || this.settings.reshDisplayUpcomingTime) {
+			output += this.settings.reshDisplayPreviousName || this.settings.reshDisplayPreviousTime ? ' | Previous Resh ' : '';
+		} else if (this.settings.reshDisplayPreviousName || this.settings.reshDisplayPreviousTime) {
+			output += 'Previous Resh ';
+		}
+		if (this.settings.reshDisplayPreviousName) {
+			output += ` (${input.previousName}) `;
+		}
+		if (this.settings.reshDisplayPreviousTime) {
+			output += input.previousTime;
+		}
+		if (output.includes('Now')) {
+			output = output.replace('in', 'is');
+		}
+		return output
+	}
+
+	getReshTimes() : string {
+		const todayTimes = this.getSunCalcTimes(new Date());
+		const tomorrowTimes = this.getSunCalcTimes(new Date(new Date().getTime() + 24 * 60 * 60 * 1000));
+
+		const formattedDate = new Date().toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric"
+		});
+
+		return '**Resh Times for ' + formattedDate + '**\n\n' +
+			' Sunrise: ' + this.formatAMPM(todayTimes.sunrise) + '\n' +
+			' Noon: ' + this.formatAMPM(todayTimes.solarNoon) + '\n' +
+			' Sunset: ' + this.formatAMPM(todayTimes.sunset) + '\n' +
+			' Midnight: ' + this.formatAMPM(tomorrowTimes.nadir);
+	}
+
 	liberReshHandler() {
 		if (!this.settings.reshStatusBar) {
 			this.statusBarItemEl.setText('');
 			return;
 		}
-		let todayTimes: SunCalc.GetTimesResult;
-		let tomorrowTimes: SunCalc.GetTimesResult;
-
-		if (this.settings.useGeolocation) {
-			todayTimes = SunCalc.getTimes(new Date(), Number(this.GeoLocation.lat), Number(this.GeoLocation.lon));
-			// and tomorrow
-			tomorrowTimes = SunCalc.getTimes(new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
-				Number(this.GeoLocation.lat), Number(this.GeoLocation.lon));
-		} else {
-			const geoFields = this.settings.customLatLonCoords.split(',');
-			todayTimes = SunCalc.getTimes(new Date(), Number(geoFields[0].trim()), Number(geoFields[1].trim()));
-			// and tomorrow
-			tomorrowTimes = SunCalc.getTimes(new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
-				Number(geoFields[0].trim()), Number(geoFields[1].trim()));
-		}
-		const sunrise = todayTimes.sunrise;
-		const noon = todayTimes.solarNoon;
-		const sunset = todayTimes.sunset;
-		const midnight = todayTimes.nadir;
-		const tomorrowMidnight = tomorrowTimes.nadir;
-
-		const now = new Date();
-		const nowTime = now.getTime();
-
-		if (nowTime < sunrise.getTime()) {
-			const reshTime = sunrise.getTime();
-			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Sunrise Resh in ' + timeString + '('+ this.formatAMPM(sunrise) +'), Previous (Midnight): ' + this.formatAMPM(midnight));
-		} else if (nowTime < noon.getTime()) {
-			const reshTime = noon.getTime();
-			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Noon Resh in ' + timeString + '('+ this.formatAMPM(noon) +'), Previous (Sunrise): ' + this.formatAMPM(sunrise));
-		} else if (nowTime < sunset.getTime()) {
-			const reshTime = sunset.getTime();
-			const timeString = this.countdownToString(reshTime)
-			this.statusBarItemEl.setText('Sunset Resh in ' + timeString + '('+ this.formatAMPM(sunset) +'), Previous (Noon): ' + this.formatAMPM(noon));
-		} else if (nowTime < tomorrowMidnight.getTime()) {
-			const reshTime = tomorrowMidnight.getTime();
-			const timeString = this.countdownToString(reshTime)
-			//const timeSinceLast = nowTime - sunset.getTime();
-			this.statusBarItemEl.setText('Midnight Resh in ' + timeString + '('+ this.formatAMPM(midnight) +'), Previous (Sunset): ' + this.formatAMPM(midnight));
-		}
-		//new Notice(this.getMagickDate());
+		this.statusBarItemEl.setText(this.formatReshOutput(this.getUpcomingResh()));
 	}
 
 	async onload() {
@@ -483,14 +594,23 @@ export default class MagickJournalPlugin extends Plugin {
 		this.reloadData()
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('wand', 'Greet', (_: MouseEvent) => {
+		const magickDateIcon = this.addRibbonIcon('wand', 'Magick Date', (_: MouseEvent) => {
 			// Called when the user clicks the icon.
 			this.reloadData();
 			this.getFullHeading();
 			new Notice(this.getMagickDate());
 		});
 		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+		magickDateIcon.addClass('my-plugin-ribbon-class');
+
+		// This creates an icon in the left ribbon.
+		const reshTimesIcon = this.addRibbonIcon('star', 'Resh Times', (_: MouseEvent) => {
+			// Called when the user clicks the icon.
+			this.reloadData();
+			new Notice(this.getReshTimes().replace(/\*/g, ''));
+		});
+		// Perform additional things with the ribbon
+		reshTimesIcon.addClass('my-plugin-ribbon-class');
 
 		// Adds a command to insert thelemic date
 		this.addCommand({
@@ -500,13 +620,29 @@ export default class MagickJournalPlugin extends Plugin {
 				this.reloadData();
 				const fullHeading = this.getFullHeading();
 				editor.replaceRange(
-					fullHeading + '  ',
+					fullHeading,
 					editor.getCursor()
 				)
 				const lines = fullHeading.split('\n');
 				const lineCount = fullHeading.split('\n').length;
 				const lastLineLength = lines[lines.length - 1].length;
 				editor.setCursor(editor.getCursor().line + lineCount, lastLineLength);
+			},
+		});
+
+		// Adds a command to insert thelemic date
+		this.addCommand({
+			id: "new-entry",
+			name: "Insert A New Entry Template",
+			editorCallback: (editor: Editor) => {
+				this.reloadData();
+				const newEntry = this.getNewEntry();
+				editor.replaceRange(
+					newEntry + '\n\n',
+					editor.getCursor()
+				)
+				const lineCount = newEntry.split('\n').length;
+				editor.setCursor(editor.getCursor().line + lineCount + 1);
 			},
 		});
 
@@ -521,6 +657,19 @@ export default class MagickJournalPlugin extends Plugin {
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
+			},
+		});
+
+		this.addCommand({
+			id: "insert-resh",
+			name: "Insert Today's Resh Schedule",
+			editorCallback: (editor: Editor) => {
+				const reshSchedule = this.getReshTimes();
+				editor.replaceRange(
+					reshSchedule + '\n\n',
+					editor.getCursor()
+				);
+				editor.setCursor(editor.getCursor().line + reshSchedule.split('\n').length + 2);
 			},
 		});
 
@@ -543,7 +692,7 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-checklist",
 			name: "Insert Checklist",
 			editorCallback: (editor: Editor) => {
-				const checklistItems = this.parseCheckList(this.settings.checkListItems);
+				const checklistItems = this.parseCheckList();
 				editor.replaceRange(
 					checklistItems,
 					editor.getCursor()
@@ -559,9 +708,9 @@ export default class MagickJournalPlugin extends Plugin {
 			id: "insert-time",
 			name: "Insert Time",
 			editorCallback: (editor: Editor) => {
-				const time = '**Time:** '+this.formatAMPM(new Date())+'\n';
+				const time = this.formatAMPM(new Date());
 				editor.replaceRange(
-					time + '\n',
+					'**' + time + '**\n',
 					editor.getCursor()
 				);
 				editor.setCursor(editor.getCursor().line + 1);
@@ -644,7 +793,7 @@ export default class MagickJournalPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		const second = 1000;
-		this.registerInterval(window.setInterval(() => this.liberReshHandler(), 1*second));
+		this.registerInterval(window.setInterval(() => this.liberReshHandler(), second));
 	}
 
 	onunload() {
@@ -707,27 +856,6 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		containerEl.createEl("br");
 
 
-		const resh_settings = containerEl.createEl("div");//, { cls: "settings_section" });
-		resh_settings.createEl("div", { text: "Liber Resh", cls: "settings_section_title" });
-		resh_settings.createEl("small", { text: "Settings for the Liber Resh Clock statusbar", cls: "settings_section_description" });
-
-		new Setting(containerEl)
-			.setName('Enable Liber Resh Statusbar')
-			.setDesc('Enables the Liber Resh Clock statusbar.')
-			.setClass("setting")
-			.addToggle(textarea => textarea
-				.setTooltip('Enable the Liber Resh Clock statusbar.')
-				.setValue(this.plugin.settings.reshStatusBar)
-				.onChange(async (value) => {
-					this.plugin.settings.reshStatusBar = value;
-					await this.plugin.saveSettings();
-					this.plugin.reloadData();
-				}));
-
-		containerEl.createEl("br");
-		containerEl.createEl("br");
-
-
 		const entry_settings = containerEl.createEl("div");//, { cls: "settings_section" });
 		entry_settings.createEl("div", { text: "Default Entries", cls: "settings_section_title" });
 		entry_settings.createEl("small", { text: "Defaults for Auto-Populated Entries", cls: "settings_section_description" });
@@ -756,7 +884,7 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Header Fields')
 			.setDesc('Comma separated fields to populate full header with.' +
-				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, Checklist, and Blank to insert a blank line.' +
+				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, Checklist, Resh, and Blank to insert a blank line.' +
 				' Unrecognized options will be inserted as additional fields.')
 			.setClass("setting")
 			.addTextArea(textarea => textarea
@@ -764,6 +892,29 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.headerFields)
 				.onChange(async (value) => {
 					this.plugin.settings.headerFields = value;
+					await this.plugin.saveSettings();
+				}));
+
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+
+		const newentry_field_settings = containerEl.createEl("div");
+		newentry_field_settings.createEl("div", { text: "Entries", cls: "settings_section_title" });
+		newentry_field_settings.createEl("small", { text: "New Entry Template", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('New Entry Fields')
+			.setDesc('Comma separated fields to populate new entries with.' +
+				' Options are: Astro, Anno, Day, EV, Time, Moon, Location, Weather, Checklist, Resh, and Blank to insert a blank line.' +
+				' Unrecognized options will be inserted as additional fields.')
+			.setClass("setting")
+			.addTextArea(textarea => textarea
+				.setPlaceholder('Enter default new entry fields separated by a comma.')
+				.setValue(this.plugin.settings.newEntryFields)
+				.onChange(async (value) => {
+					this.plugin.settings.newEntryFields = value;
 					await this.plugin.saveSettings();
 				}));
 
@@ -1044,6 +1195,117 @@ class MagickJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.padDate = value;
 					await this.plugin.saveSettings();
+				}));
+
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
+
+		const resh_settings = containerEl.createEl("div");//, { cls: "settings_section" });
+		resh_settings.createEl("div", { text: "Liber Resh", cls: "settings_section_title" });
+		resh_settings.createEl("small", { text: "Settings for the Liber Resh Clock statusbar", cls: "settings_section_description" });
+
+		new Setting(containerEl)
+			.setName('Enable Liber Resh Statusbar')
+			.setDesc('Enables the Liber Resh Clock statusbar.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Enable the Liber Resh Clock statusbar.')
+				.setValue(this.plugin.settings.reshStatusBar)
+				.onChange(async (value) => {
+					this.plugin.settings.reshStatusBar = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Use Altitude in Resh Calculations')
+			.setDesc('Use custom altitude in Resh calculations.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Use custom altitude in Resh calculations.')
+				.setValue(this.plugin.settings.reshUseAltitude)
+				.onChange(async (value) => {
+					this.plugin.settings.reshUseAltitude = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Custom Altitude')
+			.setDesc('Custom altitude in meters for Resh calculations.')
+			.setClass("setting")
+			.addText(textarea => textarea
+				.setValue(this.plugin.settings.reshAltitude)
+				.onChange(async (value) => {
+					this.plugin.settings.reshAltitude = value;
+					this.plugin.updateWeatherDescription();
+					await this.plugin.saveSettings();
+				}).then(() => {this.plugin.reloadData()}));
+
+		new Setting(containerEl)
+			.setName('Display Upcoming Resh Name')
+			.setDesc('Display the name of the upcoming Resh in the statusbar.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Display upcoming Resh name in statusbar')
+				.setValue(this.plugin.settings.reshDisplayUpcomingName)
+				.onChange(async (value) => {
+					this.plugin.settings.reshDisplayUpcomingName = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Display Upcoming Countdown')
+			.setDesc('Display a countdown in the statusbar to the next Resh.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Display countdown to next Resh in the statusbar.')
+				.setValue(this.plugin.settings.reshDisplayUpcomingCountdown)
+				.onChange(async (value) => {
+					this.plugin.settings.reshDisplayUpcomingCountdown = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Display Upcoming Time')
+			.setDesc('Display the time for the upcoming Resh in the statusbar.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Display upcoming Resh time in statusbar')
+				.setValue(this.plugin.settings.reshDisplayUpcomingTime)
+				.onChange(async (value) => {
+					this.plugin.settings.reshDisplayUpcomingTime = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Display Previous Resh Name')
+			.setDesc('Displays the previous Resh name in the statusbar.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Display previous Resh name in statusbar')
+				.setValue(this.plugin.settings.reshDisplayPreviousName)
+				.onChange(async (value) => {
+					this.plugin.settings.reshDisplayPreviousName = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
+				}));
+
+		new Setting(containerEl)
+			.setName('Display Previous Resh Time')
+			.setDesc('Displays the previous Resh time in the statusbar.')
+			.setClass("setting")
+			.addToggle(textarea => textarea
+				.setTooltip('Display previous Resh time in statusbar')
+				.setValue(this.plugin.settings.reshDisplayPreviousTime)
+				.onChange(async (value) => {
+					this.plugin.settings.reshDisplayPreviousTime = value;
+					await this.plugin.saveSettings();
+					this.plugin.reloadData();
 				}));
 
 	}

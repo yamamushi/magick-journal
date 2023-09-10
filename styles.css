@@ -22,3 +22,7 @@ If your plugin does not need CSS, delete this file.
 .setting {
 	padding: 10px;
 }
+
+input[type="text"] {
+	text-align: right;
+}

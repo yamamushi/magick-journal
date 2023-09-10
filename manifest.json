@@ -3,7 +3,7 @@
 	"name": "Magick Journal",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "This is an in-progress Obsidian plugin for various Magick-journaling related commands",
+	"description": "Tools for journaling magickal workings, including weather, moon phase, and astrological correspondences.",
 	"author": "Yamamushi",
 	"authorUrl": "https://github.com/yamamushi/magick-journal",
 	"isDesktopOnly": false

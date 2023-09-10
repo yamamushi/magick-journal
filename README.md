@@ -21,9 +21,18 @@ Example Output:
 	dies Iovis ♃
 	7-9-2023 e.v.
 	
-	**Time:** 10:56 PM MDT
+	**10:56 PM MDT**
 	**Moon:** Waning Crescent 38%
 	**Location:** Home, Colorado Springs CO
+	**Current Weather:** Clear Sky, 61.4°F, 29.83in
+
+* **new-entry**: Inserts a new journal entry with the configured [new entry](#entries) fields.
+
+Example Output:
+
+	☉︎ in 15° Virgo ♍ : ☽︎ in 29° Gemini ♊
+	**10:56 PM MDT**
+	**Moon:** Waning Crescent 38%
 	**Current Weather:** Clear Sky, 61.4°F, 29.83in
 
 * **insert-astro**: Inserts the astrological header with the Sun and Moon positions.
@@ -43,6 +52,8 @@ Example Output:
 * **insert-weather**: Inserts current local weather conditions, temperature and air pressure.
 
 * **insert-moon**: Inserts current phase of the moon and illumination percentage.
+
+* **insert-resh**: Inserts the Resh schedule for today.
 
 ## Settings
 
@@ -66,6 +77,20 @@ Example Output:
 
 **Enable Liber Resh Clock**: Whether to enable the Liber Resh Clock statusbar. This will tell you when the next Resh is, and when the previous Resh was.
 
+**Use Altitude in Resh Calculations**: Whether to use the configured altitude in the Resh calculations. If disabled, the altitude will be ignored.
+
+**Custom Altitude**: The altitude to use for Resh calculations. This should be in meters.
+
+**Display Upcoming Resh Name**: Whether to display the name of the upcoming Resh in the statusbar.
+
+**Display Upcoming Countdown**: Whether to display the countdown to the upcoming Resh in the statusbar.
+
+**Display Upcoming Time**: Whether to display the time of the upcoming Resh in the statusbar.
+
+**Display Previous Resh Name**: Whether to display the name of the previous Resh in the statusbar.
+
+**Display Previous Resh Time**: Whether to display the time of the previous Resh in the statusbar.
+
 ### Default Entries
 
 **Default Location**: The default location to use to populate the "Default Location" field in the full header output. This does not affect weather lookups, which are always performed based on your location.
@@ -82,13 +107,23 @@ Example Output:
   * **Moon**: To insert the current phase of the moon and illumination percentage
   * **Location**: To insert the configured Default Location
   * **Weather**: To insert the current local weather
+  * **Checklist**: To insert the configured [checklist](#checklist)
+  * **Resh**: To insert the Resh schedule for today.
   * **Blank**: To insert a blank line.
 
   **Unrecognized options will be inserted as additional fields.**
 
 Example Configuration:
 
-  	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Other Field 1, Other Field 2
+  	Astro, Anno, Day, EV, Blank, Time, Moon, Location, Weather, Resh, Other Field 1, Other Field 2
+
+### Entries
+
+* **New Entry Template**: Comma separated fields to populate new entries with. Available options are the same as for the [header](#header) fields.
+
+Example Configuration:
+
+	Astro, Time, Moon, Weather
 
 ### Checklist
 
