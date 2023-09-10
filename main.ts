@@ -601,7 +601,7 @@ export default class MagickJournalPlugin extends Plugin {
 		this.reloadData()
 
 		// This creates an icon in the left ribbon.
-		const magickDateIcon = this.addRibbonIcon('wand', 'Magick Date', (_: MouseEvent) => {
+		const magickDateIcon = this.addRibbonIcon('moon', 'Magick Date', (_: MouseEvent) => {
 			// Called when the user clicks the icon.
 			this.reloadData();
 			this.getFullHeading();
@@ -611,7 +611,7 @@ export default class MagickJournalPlugin extends Plugin {
 		magickDateIcon.addClass('my-plugin-ribbon-class');
 
 		// This creates an icon in the left ribbon.
-		const reshTimesIcon = this.addRibbonIcon('star', 'Resh Times', (_: MouseEvent) => {
+		const reshTimesIcon = this.addRibbonIcon('sun', 'Resh Times', (_: MouseEvent) => {
 			// Called when the user clicks the icon.
 			this.reloadData();
 			new Notice(this.getReshTimes().replace(/\*/g, ''));
@@ -635,6 +635,7 @@ export default class MagickJournalPlugin extends Plugin {
 				const lastLineLength = lines[lines.length - 1].length;
 				editor.setCursor(editor.getCursor().line + lineCount, lastLineLength);
 			},
+			icon: 'scroll',
 		});
 
 		// Adds a command to insert thelemic date
@@ -651,6 +652,7 @@ export default class MagickJournalPlugin extends Plugin {
 				const lineCount = newEntry.split('\n').length;
 				editor.setCursor(editor.getCursor().line + lineCount + 1);
 			},
+			icon: 'sticky-note',
 		});
 
 		// Adds a command to insert the astrological heading
@@ -665,6 +667,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'orbit',
 		});
 
 		this.addCommand({
@@ -678,6 +681,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + reshSchedule.split('\n').length + 2);
 			},
+			icon: 'sun',
 		});
 
 		this.addCommand({
@@ -692,7 +696,8 @@ export default class MagickJournalPlugin extends Plugin {
 				// Split additional fields by newline and count the number of lines
 				const lineCount = additionalFields.split('\n').length;
 				editor.setCursor(editor.getCursor().line + lineCount + 1);
-			}
+			},
+			icon: 'plus-circle',
 		},);
 
 		this.addCommand({
@@ -707,7 +712,8 @@ export default class MagickJournalPlugin extends Plugin {
 				// Split additional fields by newline and count the number of lines
 				const lineCount = checklistItems.split('\n').length;
 				editor.setCursor(editor.getCursor().line + lineCount + 1);
-			}
+			},
+			icon: 'list-checks',
 		},);
 
 		// Adds a command to insert the current time
@@ -722,6 +728,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'clock',
 		});
 
 		// Adds a command to insert date ev
@@ -735,6 +742,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'calendar-days',
 		});
 
 		// Adds a command to insert date AN
@@ -750,12 +758,13 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'sunrise',
 		});
 
 		// Adds a command to insert day of week
 		this.addCommand({
-			id: "insert-day",
-			name: "Insert Day",
+			id: "insert-latin-day",
+			name: "Insert Latin Day",
 			editorCallback: (editor: Editor) => {
 				editor.replaceRange(
 					this.getLatinDayOfWeek() + '\n',
@@ -763,6 +772,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'calendar-check',
 		});
 
 		// Adds a command to insert day of week
@@ -777,6 +787,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'cloud-sun-rain',
 		});
 
 		// Adds a command to insert moon phase
@@ -791,6 +802,7 @@ export default class MagickJournalPlugin extends Plugin {
 				);
 				editor.setCursor(editor.getCursor().line + 1);
 			},
+			icon: 'moon',
 		});
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
