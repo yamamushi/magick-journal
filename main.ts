@@ -135,7 +135,7 @@ export default class MagickJournalPlugin extends Plugin {
 					}
 				})
 				.catch(error => {
-					console.error('Error fetching or parsing ip-api data:', error);
+					console.error('Error fetching or parsing ip-api data, please report this:', error);
 				});
 		} else {
 			const geoFields = this.settings.customLatLonCoords.split(',');
@@ -350,6 +350,19 @@ export default class MagickJournalPlugin extends Plugin {
 		return this.TodaysDate
 	}
 
+	roundHour(dateTimeStr:string) {
+		// eslint-disable-next-line prefer-const
+		let [date, time] = dateTimeStr.split("T");
+		// eslint-disable-next-line prefer-const
+		let [hours, minutes] = time.split(":");
+
+		if (minutes === "15" || minutes === "30" || minutes === "45") {
+			time = `${hours}:00`;
+		}
+		return `${date}T${time}`;
+	}
+
+
 	updateWeatherDescription(): string {
 		if (!this.settings.weatherEnable) {
 			this.WeatherDescription = '';
@@ -371,10 +384,9 @@ export default class MagickJournalPlugin extends Plugin {
 		Object.keys(weatherParams).forEach(key => weatherURL.searchParams.append(key, weatherParams[key]));
 		fetch(weatherURL).then(response => response.json()).then(data => {
 			let temperature = data['current_weather']['temperature'].toFixed(Number(this.settings.weatherTempDecimalPlaces));
-			const currentTime = data['current_weather']['time'];
+			const currentTime = this.roundHour(data['current_weather']['time']);
 			const index = data['hourly']['time'].indexOf(currentTime).toString();
-
-			const pressureInMbar = data['hourly']['pressure_msl'][index].toFixed(2);
+			const pressureInMbar = data['hourly']['pressure_msl'][index];
 			const pressure = this.settings.weatherPressureUnits.toLowerCase() === 'mbar'
 				? `${pressureInMbar}mbar`
 				: `${this.mbarToInches(pressureInMbar).toFixed(2)}in`;
